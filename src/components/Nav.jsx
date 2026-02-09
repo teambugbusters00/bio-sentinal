@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 const Nav = () => {
   return (
     <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100]">
-          <div className="glass-panel p-2 flex items-center justify-around bg-white/5 border-white/10 shadow-2xl">
+          <div className="glass-panel p-2 flex items-center justify-around border-white/10 shadow-2xl">
             <NavLink
               to="/"
               className={({ isActive }) =>

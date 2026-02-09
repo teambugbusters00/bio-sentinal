@@ -1,16 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Nav from '../components/Nav';
 
-// --- ICONS CONFIGURATION ---
-// Custom Neon Marker Icon logic
+// --- CONFIGURATION ---
+
+const conservationDict = {
+  "EX": { label: "Extinct", color: "bg-black text-white border-white/30" },
+  "EW": { label: "Extinct in Wild", color: "bg-purple-900 text-white border-purple-500/50" },
+  "CR": { label: "Critically Endangered", color: "bg-red-600 text-white border-red-500/50" },
+  "EN": { label: "Endangered", color: "bg-red-500 text-white border-red-400/50" },
+  "VU": { label: "Vulnerable", color: "bg-orange-500 text-white border-orange-400/50" },
+  "NT": { label: "Near Threatened", color: "bg-yellow-500 text-black border-yellow-400/50" },
+  "LC": { label: "Least Concern", color: "bg-green-600 text-white border-green-400/50" },
+  "DD": { label: "Data Deficient", color: "bg-gray-500 text-white border-gray-400/50" },
+  "NE": { label: "Not Evaluated", color: "bg-slate-600 text-slate-300 border-slate-500/50" }
+};
+
 const createNeonIcon = (color = '#39FF14') => {
   return new L.DivIcon({
     className: 'custom-neon-marker',
-    html: `<span class="material-symbols-outlined text-[30px]" style="color: ${color}; text-shadow: 0 0 10px ${color};">location_on</span>`,
+    html: `<span class="material-symbols-outlined text-[30px]" style="color: ${color}; text-shadow: 0 0 15px ${color};">location_on</span>`,
     iconSize: [30, 30],
     iconAnchor: [15, 30],
     popupAnchor: [0, -30]
@@ -19,75 +32,81 @@ const createNeonIcon = (color = '#39FF14') => {
 
 const userIcon = new L.DivIcon({
     className: 'user-marker',
-    html: `<div class="w-4 h-4 bg-white rounded-full border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse"></div>`,
+    html: `<div class="w-4 h-4 bg-white rounded-full border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] animate-pulse"></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 8],
 });
 
-// --- HELPER COMPONENTS ---
+// Helper: Move Map Camera
 const MapController = ({ center, zoom }) => {
     const map = useMap();
     useEffect(() => {
-        if (center) {
-            map.flyTo(center, zoom, { duration: 2 });
-        }
+        if (center) map.flyTo(center, zoom, { duration: 2.0, easeLinearity: 0.2 });
     }, [center, zoom, map]);
     return null;
 };
 
 // --- MAIN COMPONENT ---
 const Map = () => {
-    // --- STATES ---
+    // State
     const [query, setQuery] = useState('');
-    const [center, setCenter] = useState([22.5726, 88.3639]); // Default: Kolkata (based on your profile)
-    const [zoom, setZoom] = useState(13);
+    const [center, setCenter] = useState([20.5937, 78.9629]); // Default: India
+    const [zoom, setZoom] = useState(5);
+    const [searchRadius, setSearchRadius] = useState(5000); // Default 5km
     const [speciesList, setSpeciesList] = useState([]);
     const [selectedSpecies, setSelectedSpecies] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [scanStatus, setScanStatus] = useState("SYSTEM IDLE");
+    const [scanStatus, setScanStatus] = useState("SYSTEM READY");
+    
+    // Use ref to prevent initial useEffect loop
+    const isFirstRun = useRef(true);
 
-    // --- 1. SEARCH LOCATION & FETCH SPECIES ---
+    // --- LOGIC ---
+
+    // 1. Search Location
     const handleSearch = async (e) => {
-        if (e.key === 'Enter' && query.length > 2) {
+        if (e.key === 'Enter' && query.length > 1) {
             setLoading(true);
-            setScanStatus("TRIANGULATING...");
+            setScanStatus("TRIANGULATING TARGET...");
+            setSelectedSpecies(null);
             
             try {
-                // A. Geocode Address
                 const geoRes = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
                 if (geoRes.data.length > 0) {
                     const { lat, lon } = geoRes.data[0];
                     const newCenter = [parseFloat(lat), parseFloat(lon)];
                     setCenter(newCenter);
-                    setZoom(14);
-                    
-                    // B. Fetch Species from GBIF
-                    fetchSpecies(lat, lon);
+                    setZoom(13);
+                    fetchSpecies(parseFloat(lat), parseFloat(lon));
                 } else {
-                    setScanStatus("LOCATION NOT FOUND");
+                    setScanStatus("COORDINATES NOT FOUND");
+                    setLoading(false);
                 }
             } catch (err) {
                 console.error(err);
-                setScanStatus("NETWORK ERROR");
-            } finally {
+                setScanStatus("CONNECTION ERROR");
                 setLoading(false);
             }
         }
     };
 
+    // 2. Fetch Species (Triggered by Search or Slider Change)
     const fetchSpecies = async (lat, lon) => {
-        setScanStatus("SCANNING BIOSIGNATURES...");
-        // Define a roughly 5km range box
-        const range = 0.05; 
+        setScanStatus(`SCANNING ${searchRadius}M RADIUS...`);
+        setLoading(true);
+        
+        // Convert radius (meters) to degrees approx (1 deg lat ~= 111km)
+        const degreeDelta = searchRadius / 111000;
+
         try {
             const gbifUrl = `https://api.gbif.org/v1/occurrence/search`;
             const params = {
-                decimalLatitude: `${lat - range},${parseFloat(lat) + range}`,
-                decimalLongitude: `${lon - range},${parseFloat(lon) + range}`,
-                taxonKey: '1', // Animals
+                decimalLatitude: `${lat - degreeDelta},${lat + degreeDelta}`,
+                decimalLongitude: `${lon - degreeDelta},${lon + degreeDelta}`,
+                taxonKey: '1', // Kingdom Animalia
                 hasCoordinate: 'true',
                 mediaType: 'StillImage', 
-                limit: 20, 
+                limit: 50, 
             };
             
             const res = await axios.get(gbifUrl, { params });
@@ -96,22 +115,41 @@ const Map = () => {
             setSpeciesList(results);
             
             if (results.length > 0) {
-                setScanStatus(`${results.length} SIGNATURES DETECTED`);
-                setSelectedSpecies(results[0]); // Auto-select first result
+                setScanStatus(`${results.length} LIFEFORMS DETECTED`);
             } else {
-                setScanStatus("NO LIFEFORMS DETECTED");
+                setScanStatus("SECTOR CLEAR (NO DATA)");
             }
-
         } catch (error) {
-            setScanStatus("SENSOR FAILURE");
+            setScanStatus("SENSOR MALFUNCTION");
+        } finally {
+            setLoading(false);
         }
+    };
+
+    // Re-fetch when radius changes (only if we have already searched/moved)
+    useEffect(() => {
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
+        // Don't fetch if we are still at default zoom (viewing whole country)
+        if (zoom > 10) {
+            const timeoutId = setTimeout(() => {
+                fetchSpecies(center[0], center[1]);
+            }, 500); // Debounce slider inputs
+            return () => clearTimeout(timeoutId);
+        }
+    }, [searchRadius]);
+
+    const getStatusInfo = (code) => {
+        return conservationDict[code] || conservationDict["NE"];
     };
 
     // --- RENDER ---
     return (
         <div className="font-sans bg-black text-slate-100 antialiased overflow-hidden h-screen w-full relative">
             
-            {/* --- MAP LAYER (Background) --- */}
+            {/* BACKGROUND MAP */}
             <div className="absolute inset-0 z-0">
                 <MapContainer 
                     center={center} 
@@ -120,99 +158,113 @@ const Map = () => {
                     attributionControl={false}
                     style={{ height: "100%", width: "100%", background: "#050505" }}
                 >
-                    {/* Dark/Sci-Fi Tile Layer */}
-                    <TileLayer
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    />
-                    
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
                     <MapController center={center} zoom={zoom} />
 
-                    {/* Render Species Markers */}
-                    {speciesList.map((s) => (
-                        <Marker 
-                            key={s.key}
-                            position={[s.decimalLatitude, s.decimalLongitude]}
-                            icon={createNeonIcon(s.iucnRedListCategory === 'CR' ? '#ff0055' : '#39FF14')}
-                            eventHandlers={{
-                                click: () => {
-                                    setSelectedSpecies(s);
-                                    setCenter([s.decimalLatitude, s.decimalLongitude]);
-                                },
+                    {/* Scanning Radius Visualizer */}
+                    {zoom > 8 && (
+                        <Circle 
+                            center={center}
+                            pathOptions={{ 
+                                color: '#39FF14', 
+                                fillColor: '#39FF14', 
+                                fillOpacity: 0.05, 
+                                weight: 1, 
+                                dashArray: '5, 10' 
                             }}
+                            radius={searchRadius} 
                         />
-                    ))}
-                    
-                    {/* User Location Marker (Simulated Center) */}
+                    )}
+
+                    {/* Markers */}
+                    {speciesList.map((s) => {
+                        const isRisk = ['CR', 'EN', 'VU'].includes(s.iucnRedListCategory);
+                        return (
+                            <Marker 
+                                key={s.key}
+                                position={[s.decimalLatitude, s.decimalLongitude]}
+                                icon={createNeonIcon(isRisk ? '#FF007F' : '#39FF14')}
+                                eventHandlers={{
+                                    click: () => {
+                                        setSelectedSpecies(s);
+                                        setCenter([s.decimalLatitude, s.decimalLongitude]);
+                                    },
+                                }}
+                            />
+                        );
+                    })}
                     <Marker position={center} icon={userIcon} />
                 </MapContainer>
                 
-                {/* Visual Overlay: Grid & Vignette */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none"></div>
-                <div 
-                    className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-                    style={{ 
-                        backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', 
-                        backgroundSize: '40px 40px' 
-                    }}
-                ></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
             </div>
 
-            {/* --- UI LAYER: Header & Search --- */}
-            <div className="absolute top-0 left-0 w-full z-20 p-4 pt-14">
+            {/* HEADER & SEARCH & SLIDER */}
+            <div className="absolute top-0 left-0 w-full z-20 p-4 pt-14 flex flex-col gap-4">
+                {/* Search Bar */}
                 <div className="flex items-center gap-3">
-                    <div className="flex-1 glass-panel h-12 rounded-2xl flex items-center px-4 relative">
+                    <div className="flex-1 glass-panel h-12 rounded-2xl flex items-center px-4 relative transition-all duration-300 focus-within:bg-white/10">
                         <span className="material-symbols-outlined text-primary mr-3 text-xl">search</span>
                         <input 
-                            className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-slate-500 font-medium text-white focus:outline-none uppercase" 
+                            className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-slate-500 font-medium text-white focus:outline-none uppercase tracking-wider" 
                             placeholder={scanStatus}
                             type="text" 
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={handleSearch}
                         />
-                        {loading && (
-                            <div className="absolute right-4 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        )}
+                        {loading && <div className="absolute right-4 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
                     </div>
                     <button className="size-12 glass-panel rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
                         <span className="material-symbols-outlined text-slate-300">tune</span>
                     </button>
                 </div>
+
+                {/* Range Slider Glass Panel */}
+                <div className="glass-panel p-3 rounded-2xl flex flex-col gap-2 w-2/3 max-w-sm mx-auto backdrop-blur-md border-white/5 animate-in slide-in-from-top-5">
+                    <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Scan Radius</span>
+                        <span className="text-[10px] font-mono text-white/80">
+                            {searchRadius < 1000 ? `${searchRadius}m` : `${(searchRadius / 1000).toFixed(1)}km`}
+                        </span>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="500" 
+                        max="10000" 
+                        step="500" 
+                        value={searchRadius}
+                        onChange={(e) => setSearchRadius(Number(e.target.value))}
+                        className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-green-400"
+                    />
+                    <div className="flex justify-between text-[8px] text-white/30 px-1 font-mono">
+                        <span>500m</span>
+                        <span>10km</span>
+                    </div>
+                </div>
             </div>
 
-            {/* --- UI LAYER: Right Controls --- */}
-            <div className="absolute top-36 right-4 z-20 flex flex-col gap-4">
+            {/* RIGHT CONTROLS */}
+            <div className="absolute top-48 right-4 z-20 flex flex-col gap-4">
                 <div className="flex flex-col glass-capsule p-1.5 gap-1">
-                    <button className="size-10 flex items-center justify-center text-slate-300 hover:text-primary transition-colors">
-                        <span className="material-symbols-outlined">layers</span>
-                    </button>
-                    <div className="h-[1px] w-6 mx-auto bg-white/10"></div>
-                    <button className="size-10 flex items-center justify-center text-primary">
-                        <span className="material-symbols-outlined filled-icon">satellite_alt</span>
-                    </button>
-                </div>
-                <div className="flex flex-col glass-capsule p-1.5 gap-1">
-                    <button 
-                        className="size-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-                        onClick={() => setZoom(z => z + 1)}
-                    >
+                    <button className="size-10 flex items-center justify-center text-slate-300 hover:text-white" onClick={() => setZoom(z => z + 1)}>
                         <span className="material-symbols-outlined">add</span>
                     </button>
                     <div className="h-[1px] w-6 mx-auto bg-white/10"></div>
-                    <button 
-                        className="size-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-                        onClick={() => setZoom(z => z - 1)}
-                    >
+                    <button className="size-10 flex items-center justify-center text-slate-300 hover:text-white" onClick={() => setZoom(z => z - 1)}>
                         <span className="material-symbols-outlined">remove</span>
                     </button>
                 </div>
                 <button 
-                    className="size-12 glass-capsule flex items-center justify-center text-primary neon-glow-green border-primary/30 hover:bg-primary/20 transition-colors"
+                    className="size-12 glass-capsule flex items-center justify-center text-primary neon-glow-green border-primary/30 hover:bg-primary/20"
                     onClick={() => {
-                        // Reset to user location (simulated)
+                        if (!navigator.geolocation) return;
+                        setScanStatus("LOCATING USER...");
                         navigator.geolocation.getCurrentPosition(pos => {
                              const { latitude, longitude } = pos.coords;
                              setCenter([latitude, longitude]);
+                             setZoom(14);
                              fetchSpecies(latitude, longitude);
                         });
                     }}
@@ -221,96 +273,64 @@ const Map = () => {
                 </button>
             </div>
 
-            {/* --- UI LAYER: Registry Legend --- */}
-            <div className="absolute bottom-[38%] left-4 z-20 glass-panel p-3 rounded-xl min-w-[130px]">
-                <h4 className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-3 font-mono">Registry Legend</h4>
-                <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                        <div className="size-2.5 rounded-full bg-primary neon-glow-green"></div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Safe</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="size-2.5 rounded-full bg-accent neon-glow-pink"></div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Endangered</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- UI LAYER: Detail Card (Dynamic) --- */}
-            <div className="absolute bottom-0 left-0 w-full z-30 px-4 pb-10">
+            {/* DETAIL CARD */}
+            <div className="absolute bottom-0 left-0 w-full z-30 px-4 pb-28">
                 {selectedSpecies ? (
-                    <div className="glass-panel rounded-[2rem] overflow-hidden relative transition-all duration-500">
-                        {/* Ambient Background Glows */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 blur-3xl -mr-16 -mt-16"></div>
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 blur-3xl -ml-16 -mb-16"></div>
-                        
+                    <div className="glass-panel rounded-[2rem] overflow-hidden relative transition-all duration-500 animate-in slide-in-from-bottom-10 fade-in">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
                         <div className="h-1.5 w-10 bg-white/10 rounded-full mx-auto mt-3 mb-1"></div>
                         
                         <div className="p-5">
-                            <div className="flex justify-between items-start mb-5">
-                                <div className="flex-1 pr-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className={`px-2 py-0.5 border text-[9px] font-bold rounded uppercase tracking-[0.15em] ${
-                                            selectedSpecies.iucnRedListCategory === 'CR' || selectedSpecies.iucnRedListCategory === 'EN'
-                                            ? 'border-accent/50 bg-accent/10 text-accent'
-                                            : 'border-primary/50 bg-primary/10 text-primary'
-                                        }`}>
-                                            {selectedSpecies.iucnRedListCategory || 'DATA DEFICIENT'}
+                            <div className="flex gap-4">
+                                <div 
+                                    className="w-24 h-24 rounded-2xl bg-cover bg-center border border-white/10 relative overflow-hidden shrink-0 shadow-lg" 
+                                    style={{ backgroundImage: `url("${selectedSpecies.media?.[0]?.identifier || 'https://placehold.co/100x100/000/FFF?text=No+Img'}")` }}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className={`px-2 py-0.5 border text-[9px] font-bold rounded-md uppercase tracking-wider ${getStatusInfo(selectedSpecies.iucnRedListCategory).color}`}>
+                                            {getStatusInfo(selectedSpecies.iucnRedListCategory).label}
                                         </span>
-                                        <span className="text-slate-500 text-[10px] font-mono tracking-tighter">ID-{selectedSpecies.key}</span>
+                                        <span className="text-white/30 text-[9px] font-mono">ID: {selectedSpecies.key}</span>
                                     </div>
-                                    <h2 className="text-2xl font-bold leading-tight text-white font-sans tracking-tight line-clamp-1">
+
+                                    <h2 className="text-xl font-bold text-white leading-tight truncate italic font-serif">
                                         {selectedSpecies.species || selectedSpecies.scientificName}
                                     </h2>
-                                    <p className="text-slate-400 text-xs font-mono tracking-wide mt-1 uppercase">
-                                        {selectedSpecies.order} • {selectedSpecies.family}
+                                    <p className="text-white/50 text-xs font-bold uppercase tracking-wide mt-0.5">
+                                        {selectedSpecies.vernacularName || selectedSpecies.family || "Unknown Common Name"}
                                     </p>
-                                </div>
-                                {/* Thumbnail Image */}
-                                <div 
-                                    className="size-20 rounded-2xl bg-cover bg-center border border-white/10 relative overflow-hidden shrink-0" 
-                                    style={{ 
-                                        backgroundImage: `url("${selectedSpecies.media?.[0]?.identifier || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDC129rLoC1aevX4lPQtm0JuGdXqUxV_EO3RX_oy7ZI7TGE_Ro2Dc6EV809wR8BBr7UdqTVV4pxtXYqlVIyQ3jbrGWg9xvGTLxXZiHdGExWu7iQ-X1D4F_D5GY0_TCUAbfqSOBg_wMUWVGvUb-eJtaHEiL5eSokC4OJDjUaitLBPQx_yrb5u7ej1a7lmB1iKqjxXeIPAJuMh6KbYzR5b6UI0x8eew79p40ZN_MvPt8BS1eQGLb1GWp51-DzVveUHi-2S5CeUSjWz72G'}")` 
-                                    }}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
-                                    <p className="text-[9px] text-slate-500 uppercase font-bold tracking-[0.1em] mb-1 font-mono">GIS COORDS</p>
-                                    <p className="text-[11px] font-mono font-medium text-slate-200">
-                                        {selectedSpecies.decimalLatitude.toFixed(4)}, {selectedSpecies.decimalLongitude.toFixed(4)}
-                                    </p>
-                                </div>
-                                <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
-                                    <p className="text-[9px] text-slate-500 uppercase font-bold tracking-[0.1em] mb-1 font-mono">BASIS</p>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-primary text-[14px] filled-icon">verified</span>
-                                        <p className="text-[11px] font-bold text-primary tracking-wide">
-                                            {selectedSpecies.basisOfRecord?.replace('_', ' ') || 'OBSERVATION'}
-                                        </p>
+                                    
+                                    <div className="mt-3 flex items-center gap-3 text-[10px] text-white/60">
+                                        <div className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[12px]">calendar_today</span>
+                                            {selectedSpecies.eventDate ? new Date(selectedSpecies.eventDate).toLocaleDateString() : 'N/A'}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[12px]">public</span>
+                                            {selectedSpecies.country || "Unknown"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3">
-                                <button className="flex-1 h-14 bg-primary text-black font-extrabold rounded-2xl flex items-center justify-center gap-2 uppercase tracking-tighter text-sm neon-glow-green hover:brightness-110 transition-all">
-                                    <span className="material-symbols-outlined font-bold">query_stats</span>
-                                    Analyze Data
-                                </button>
-                                <button className="size-14 glass-panel border-white/20 rounded-2xl flex items-center justify-center text-white active:scale-95 transition-transform hover:bg-white/10">
-                                    <span className="material-symbols-outlined">share</span>
-                                </button>
+                            <div className="flex gap-3 mt-5">
+                                <Link to={`/species/${selectedSpecies.key}`} className="hover:cursor-pointer flex-1 h-12 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
+                                    <span className="material-symbols-outlined text-[16px]">info</span>
+                                    Details
+                                </Link>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    // Default State when no species selected
-                    <div className="glass-panel rounded-3xl p-6 text-center">
-                        <span className="material-symbols-outlined text-white/30 text-4xl mb-2">travel_explore</span>
-                        <p className="text-white/50 text-sm font-medium">Use the search bar or click "My Location" to scan for biodiversity.</p>
+                    <div className="glass-panel rounded-3xl p-6 text-center border-white/5 bg-white/[0.02]">
+                        <span className="material-symbols-outlined text-white/20 text-4xl mb-3 animate-pulse">radar</span>
+                        <h3 className="text-white/90 font-bold text-sm uppercase tracking-widest mb-1">Scanner Ready</h3>
+                        <p className="text-white/40 text-xs">Adjust radius and search a location to begin bio-scan.</p>
                     </div>
                 )}
             </div>
