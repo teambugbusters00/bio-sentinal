@@ -1,7 +1,7 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
-import Map from './pages/Map';
+import Map from './pages/map';
 import SpeciesDetail from './pages/SpeciesDetail';
 import Dashboard from './pages/Dashboard';
 import Alert from './pages/Alert';
