@@ -5,7 +5,14 @@ import Nav from '../components/Nav';
 const Dashboard = () => {
     return (
         // Added a dark background wrapper so the glass effects are visible
-        <div className="min-h-screen bg-slate-900 text-slate-200 pb-28 font-sans selection:bg-primary/30">
+        <div className="min-h-screen pb-28 font-sans selection:bg-primary/30">
+            {/* Header */}
+                <div className="flex items-center pt-6 justify-between">
+                    <div className="flex-1 flex flex-col items-center">
+                        <h2 className="frosted-text text-lg font-bold tracking-tight">Dahboard</h2>
+                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Bio Sentinel</span>
+                    </div>
+                </div>
             <main className="max-w-md mx-auto px-5 py-6 flex flex-col gap-8">    
                 {/* Profile Card */}
                 <section className="glass-panel rounded-3xl p-6 relative overflow-hidden">

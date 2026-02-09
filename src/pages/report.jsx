@@ -123,7 +123,7 @@ const Report = () => {
                 <div className="flex items-center p-6 justify-between">
                     <div className="flex-1 flex flex-col items-center">
                         <h2 className="frosted-text text-lg font-bold tracking-tight">Report Observation</h2>
-                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">BioSentinel Core</span>
+                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Bio Sentinel</span>
                     </div>
                 </div>
 

@@ -5,6 +5,13 @@ import Nav from '../components/Nav';
 const Alerts = () => {
     return (
         <div className="text-white/90 font-sans min-h-screen bg-bg-dark selection:bg-neon-green/30">
+            {/* Header */}
+                <div className="flex items-center pt-6 justify-between">
+                    <div className="flex-1 flex flex-col items-center">
+                        <h2 className="frosted-text text-lg font-bold tracking-tight">Alerts</h2>
+                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Bio Sentinel</span>
+                    </div>
+                </div>
             <main className="p-6 space-y-6 max-w-md mx-auto pb-32">
                 {/* Card 1: Critical (Animated) */}
                 <div className="glass-card pulse-border-pink relative flex flex-col gap-4 rounded-3xl bg-hard-pink/[0.08] p-5 shadow-2xl">
