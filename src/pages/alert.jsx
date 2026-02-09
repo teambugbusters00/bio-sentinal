@@ -1,5 +1,6 @@
 import React from 'react';
 import '../css/alert.css';
+import Nav from '../components/Nav';
 
 const Alerts = () => {
     return (
@@ -166,32 +167,7 @@ const Alerts = () => {
                 </div>
             </main>
 
-            {/* Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-2xl border-t border-white/10 pb-9 pt-3 px-8 z-50">
-                <div className="max-w-md mx-auto flex justify-between items-center">
-                    <button className="flex flex-col items-center gap-1.5 text-neon-green">
-                        <span className="material-symbols-outlined font-bold text-2xl shadow-glow">home</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Feed</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-2xl">map</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Explore</span>
-                    </button>
-                    <div className="relative -top-8">
-                        <button className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.2)] active:scale-90 transition-transform">
-                            <span className="material-symbols-outlined text-3xl font-bold">add</span>
-                        </button>
-                    </div>
-                    <button className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-2xl">insights</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Stats</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-2xl">person</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Profile</span>
-                    </button>
-                </div>
-            </nav>
+            <Nav />
         </div>
     );
 };

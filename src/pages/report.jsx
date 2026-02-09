@@ -1,4 +1,5 @@
 import React from 'react';
+import Nav from '../components/Nav';
 
 const Report = () => {
     return (
@@ -142,6 +143,7 @@ const Report = () => {
                     </button>
                 </div>
             </div>
+            <Nav />
         </div>
     )
 }

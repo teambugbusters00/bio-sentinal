@@ -1,5 +1,6 @@
 import React from 'react';
 import '../css/map.css';
+import Nav from '../components/Nav';
 
 const Map = () => {
   return (
@@ -188,11 +189,10 @@ const Map = () => {
               </div>
             </div>
           </div>
+          <Nav />
         </div>
         
-        {/* iOS Home Indicator */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/10 rounded-full z-40"></div>
-      </div>
+        </div>
     </div>
   );
 };

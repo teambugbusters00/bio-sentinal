@@ -1,5 +1,6 @@
 import React from 'react'
 import '../css/landing.css'
+import Nav from '../components/Nav'
 
 const landing = () => {
   return (
@@ -153,25 +154,7 @@ const landing = () => {
             </div>
           </footer>
         </main>
-        <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[100]">
-          <div className="glass-panel p-2 flex items-center justify-around bg-white/5 border-white/10 shadow-2xl">
-            <button className="w-12 h-12 flex items-center justify-center text-primary-green">
-              <span className="material-symbols-outlined">home</span>
-            </button>
-            <button className="w-12 h-12 flex items-center justify-center text-white/40">
-              <span className="material-symbols-outlined">explore</span>
-            </button>
-            <button className="w-14 h-14 -mt-12 rounded-full glass-button-primary flex items-center justify-center shadow-[0_0_30px_rgba(34,255,136,0.4)] border-primary-green/60">
-              <span className="material-symbols-outlined text-3xl leading-none">add</span>
-            </button>
-            <button className="w-12 h-12 flex items-center justify-center text-white/40">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="w-12 h-12 flex items-center justify-center text-white/40">
-              <span className="material-symbols-outlined">account_circle</span>
-            </button>
-          </div>
-        </nav>
+        <Nav />
       </div>
       </>
       );
