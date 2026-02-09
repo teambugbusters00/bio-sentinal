@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom'
 
 const landing = () => {
   return (
-    <>
       <div className="overflow-x-hidden">
         <main className="px-4 pb-32">
           <section className="mt-4 relative group">
@@ -17,7 +16,7 @@ const landing = () => {
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-pink/20 border border-accent-pink/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent-pink animate-pulse"></span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent-pink">Global Sentinel Live</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent-pink">Bio Sentinel Live</span>
                 </div>
                 <h1 className="text-4xl font-extrabold text-white leading-[1.1] tracking-tight">
                   Detect, Protect <br />&amp; Preserve.
@@ -117,7 +116,6 @@ const landing = () => {
         </main>
         <Nav />
       </div>
-      </>
       );
   }
 

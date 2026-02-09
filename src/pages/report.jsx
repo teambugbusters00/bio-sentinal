@@ -277,8 +277,8 @@ const Report = () => {
                 </form>
 
                 {/* Submit Button */}
-                <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 z-[70]">
-                    <div className="absolute inset-0 bg-gradient-to-t from-bg-gradient-end via-bg-gradient-end/90 to-transparent pointer-events-none -mt-10"></div>
+                <div className=" max-w-md mx-auto p-6 z-70 relative">
+                    <div className="absolute inset-0 bg-linear-to-t from-bg-gradient-end via-bg-gradient-end/90 to-transparent pointer-events-none -mt-10"></div>
                     <button 
                         onClick={handleSubmit}
                         className="relative w-full glass-panel bg-neon-green hover:bg-neon-green/90 text-black font-black h-16 flex items-center justify-center neon-glow transition-all active:scale-95 uppercase tracking-widest text-sm rounded-2xl shadow-[0_0_20px_rgba(57,255,20,0.4)]"
