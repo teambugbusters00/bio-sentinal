@@ -56,7 +56,7 @@ const Map = () => {
     const [speciesList, setSpeciesList] = useState([]);
     const [selectedSpecies, setSelectedSpecies] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [scanStatus, setScanStatus] = useState("SYSTEM READY");
+    const [scanStatus, setScanStatus] = useState("Enter a location to scan (e.g. Amazon Rainforest, Delhi)");
     
     // Use ref to prevent initial useEffect loop
     const isFirstRun = useRef(true);
@@ -216,9 +216,6 @@ const Map = () => {
                         />
                         {loading && <div className="absolute right-4 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
                     </div>
-                    <button className="size-12 glass-panel rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined text-slate-300">tune</span>
-                    </button>
                 </div>
 
                 {/* Range Slider Glass Panel */}
@@ -246,7 +243,7 @@ const Map = () => {
             </div>
 
             {/* RIGHT CONTROLS */}
-            <div className="absolute top-48 right-4 z-20 flex flex-col gap-4">
+            <div className="bg-black rounded-xl absolute top-48 right-4 z-20 flex flex-col gap-4">
                 <div className="flex flex-col glass-capsule p-1.5 gap-1">
                     <button className="size-10 flex items-center justify-center text-slate-300 hover:text-white" onClick={() => setZoom(z => z + 1)}>
                         <span className="material-symbols-outlined">add</span>
