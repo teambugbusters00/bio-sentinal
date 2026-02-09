@@ -1,22 +1,12 @@
 import React from 'react'
 import '../css/landing.css'
 import Nav from '../components/Nav'
+import { Link } from 'react-router-dom'
 
 const landing = () => {
   return (
     <>
       <div className="overflow-x-hidden">
-        <header className="sticky top-0 z-[70] px-4 py-4">
-          <nav className="glass-panel px-5 py-3 flex items-center justify-between border-white/5 bg-white/5">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-green">shield_person</span>
-              <span className="font-bold tracking-tight text-white">BioSentinel</span>
-            </div>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5">
-              <span className="material-symbols-outlined text-white">menu</span>
-            </button>
-          </nav>
-        </header>
         <main className="px-4 pb-32">
           <section className="mt-4 relative group">
             <div className="glass-panel overflow-hidden min-h-[500px] relative flex flex-col justify-end p-8 border-white/10">
@@ -36,12 +26,12 @@ const landing = () => {
                   Government-grade AI monitoring for planetary biodiversity and ecological shifts.
                 </p>
                 <div className="flex flex-col gap-3">
-                  <button className="glass-button-primary h-14 w-full font-bold flex items-center justify-center gap-2 text-lg active:scale-[0.98] transition-transform">
+                  <Link to='/map' className="glass-button-primary h-14 w-full font-bold flex items-center justify-center gap-2 text-lg active:scale-[0.98] transition-transform">
                     Explore Map <span className="material-symbols-outlined">explore</span>
-                  </button>
-                  <button className="glass-button-secondary h-14 w-full font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+                  </Link>
+                  <Link to='/report' className="glass-button-secondary h-14 w-full font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
                     Report Sighting <span className="material-symbols-outlined text-accent-pink">add_a_photo</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -124,35 +114,6 @@ const landing = () => {
               </div>
             </div>
           </section>
-          <footer className="mt-16 pb-10">
-            <div className="glass-panel p-8 border-white/5 bg-white/[0.02]">
-              <div className="flex items-center gap-2 mb-6">
-                <span className="material-symbols-outlined text-primary-green opacity-50">shield_person</span>
-                <span className="font-bold text-sm text-white opacity-50">BioSentinel Platform</span>
-              </div>
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div className="space-y-3">
-                  <h6 className="text-[10px] uppercase text-white/30 font-bold">Protocol</h6>
-                  <ul className="text-xs text-white/60 space-y-2">
-                    <li>API Access</li>
-                    <li>Verified Data</li>
-                    <li>GIS Specs</li>
-                  </ul>
-                </div>
-                <div className="space-y-3">
-                  <h6 className="text-[10px] uppercase text-white/30 font-bold">Agency</h6>
-                  <ul className="text-xs text-white/60 space-y-2">
-                    <li>Legal Notice</li>
-                    <li>Security</li>
-                    <li>About</li>
-                  </ul>
-                </div>
-              </div>
-              <p className="text-[10px] text-white/20 border-t border-white/5 pt-6">
-                © 2024 BioSentinel EPA. Federal verification protocols in effect. All sensor data is subject to cryptographic validation.
-              </p>
-            </div>
-          </footer>
         </main>
         <Nav />
       </div>

@@ -5,52 +5,7 @@ import Nav from '../components/Nav';
 const Alerts = () => {
     return (
         <div className="text-white/90 font-sans min-h-screen bg-bg-dark selection:bg-neon-green/30">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/10">
-                <div className="flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-neon-green/20 p-2 rounded-xl border border-neon-green/30 shadow-[0_0_15px_rgba(57,255,20,0.2)]">
-                            <span className="material-symbols-outlined text-neon-green text-xl">shield_with_heart</span>
-                        </div>
-                        <h1 className="text-xl font-bold tracking-tight text-white">BioSentinel</h1>
-                    </div>
-                    <div className="flex gap-4">
-                        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                            <span className="material-symbols-outlined text-white/70">search</span>
-                        </button>
-                        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 relative hover:bg-white/10 transition-colors">
-                            <span className="material-symbols-outlined text-white/70">notifications</span>
-                            <span className="absolute top-2.5 right-2.5 block h-2 w-2 rounded-full bg-hard-pink shadow-[0_0_8px_rgba(255,0,127,0.6)] animate-pulse"></span>
-                        </button>
-                    </div>
-                </div>
-                
-                {/* Filter Tabs */}
-                <div className="flex gap-2 px-6 pb-4 overflow-x-auto no-scrollbar">
-                    <button className="flex h-9 shrink-0 items-center justify-center rounded-full bg-white/10 border border-white/20 px-5 text-xs font-bold text-white uppercase tracking-wider hover:bg-white/20 transition-all">
-                        All Alerts
-                    </button>
-                    <button className="flex h-9 shrink-0 items-center justify-center rounded-full bg-hard-pink/10 border border-hard-pink/30 px-5 text-xs font-bold text-hard-pink uppercase tracking-wider hover:bg-hard-pink/20 transition-all">
-                        Critical
-                    </button>
-                    <button className="flex h-9 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 px-5 text-xs font-bold text-white/40 uppercase tracking-wider hover:bg-white/10 transition-all">
-                        At Risk
-                    </button>
-                    <button className="flex h-9 shrink-0 items-center justify-center rounded-full bg-neon-green/10 border border-neon-green/30 px-5 text-xs font-bold text-neon-green uppercase tracking-wider hover:bg-neon-green/20 transition-all">
-                        Positive
-                    </button>
-                </div>
-            </header>
-
             <main className="p-6 space-y-6 max-w-md mx-auto pb-32">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40">Real-time Feed</h2>
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-neon-green">
-                        <span className="h-1.5 w-1.5 rounded-full bg-neon-green shadow-[0_0_8px_#39FF14] animate-pulse"></span>
-                        LIVE MONITORING
-                    </div>
-                </div>
-
                 {/* Card 1: Critical (Animated) */}
                 <div className="glass-card pulse-border-pink relative flex flex-col gap-4 rounded-3xl bg-hard-pink/[0.08] p-5 shadow-2xl">
                     <div className="flex justify-between items-start">

@@ -6,30 +6,7 @@ const Dashboard = () => {
     return (
         // Added a dark background wrapper so the glass effects are visible
         <div className="min-h-screen bg-slate-900 text-slate-200 pb-28 font-sans selection:bg-primary/30">
-            
-            {/* Header */}
-            <header className="sticky top-0 z-50 glass-panel border-b-0 rounded-b-2xl">
-                <div className="flex items-center justify-between px-6 h-16">
-                    <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary glow-text-primary text-2xl">biotech</span>
-                        <h1 className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">BioSentinel</h1>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="w-10 h-10 rounded-full flex items-center justify-center glass-panel border-white/5 hover:bg-white/5 transition-colors">
-                            <span className="material-symbols-outlined text-xl">search</span>
-                        </button>
-                        <div className="relative">
-                            <button className="w-10 h-10 rounded-full flex items-center justify-center glass-panel border-white/5 hover:bg-white/5 transition-colors">
-                                <span className="material-symbols-outlined text-xl">notifications</span>
-                            </button>
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full shadow-[0_0_8px_#ff007f]"></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="max-w-md mx-auto px-5 py-6 flex flex-col gap-8">
-                
+            <main className="max-w-md mx-auto px-5 py-6 flex flex-col gap-8">    
                 {/* Profile Card */}
                 <section className="glass-panel rounded-3xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -mr-16 -mt-16"></div>
