@@ -1,17 +1,16 @@
-import React from 'react'
 import '../css/landing.css'
 import Nav from '../components/Nav'
 import { Link } from 'react-router-dom'
 
-const landing = () => {
+const Landing = () => {
   return (
       <div className="overflow-x-hidden">
         <main className="px-4 pb-32">
           <section className="mt-4 relative group">
-            <div className="glass-panel overflow-hidden min-h-[500px] relative flex flex-col justify-end p-8 border-white/10">
+            <div className="glass-panel overflow-hidden min-h-125 relative flex flex-col justify-end p-8 border-white/10">
               <div className="absolute inset-0 z-[-1]">
                 <img alt="Biodiversity" className="w-full h-full object-cover opacity-40 scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiJ46tjQUxFkYqQ-43q0mVTtUFATUlRUdzc3LiQuYMKzzKPC36XC8KOsLTm-4Xa41fUgcKR4PCRh_4O_LfJVt0xPVyIPUHDpNuebQujpBjUO0jaBiPnCql0xWgi3uKYmKZcHmUIxRxqPzQk_CIz_s2ph85bg6qTX3LeYkZvuKlYo-tsARCrNnXpLpGSDfvPU4Qf37qh5rR5jreIBswZlO7ik0dYMwCnaXeiPa4HQmDeWvVWHS5BAMGIe_NkuiWFI8HcxB7Ahg7xgeP" />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-start via-dark-start/60 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-dark-start via-dark-start/60 to-transparent"></div>
               </div>
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-pink/20 border border-accent-pink/30">
@@ -119,4 +118,4 @@ const landing = () => {
       );
   }
 
-      export default landing
+      export default Landing

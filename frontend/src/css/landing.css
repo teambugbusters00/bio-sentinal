@@ -24,7 +24,6 @@ body::before {
   opacity: 0.04;
   pointer-events: none;
   z-index: 100;
-  background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAEWl7L9TW_8W3zmA9rsD98mZRII30H-SNa3AAkmn4WACDlBsDtPudw2gJrAaX6_2wWh2WYudFHlPFdHqQ_4HGGCo08M2lYL4Upq4X8tL0awAgiNiikrH7jvYCGNADheWucqGDE7gKtLHfB7YX5a6TZenZeCFYFDGKXeVltXrAUcAd_3IIwwsNnwIkMZ0awcUVmbGQpwoWtWt9_njua08-Fltn-BbW7KJg7ONI90qyFqpYqLYFUtu3rt_y6vQiIoKbSTN5EUhclL5rY");
 }
 
 /* ---------- GLASS UI ---------- */
