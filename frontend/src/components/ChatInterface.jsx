@@ -101,7 +101,7 @@ const ChatInterface = ({ onClose, species }) => {
       }
 
       // 5. API Call
-      const response = await axios.post('http://localhost:3000/api/chat', payload);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/chat`, payload);
 
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
