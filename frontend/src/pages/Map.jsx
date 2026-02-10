@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { getUserLocation } from '../utils/location';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Nav from '../components/Nav';
@@ -9,25 +10,25 @@ import Nav from '../components/Nav';
 // --- CONFIGURATION ---
 
 const conservationDict = {
-  "EX": { label: "Extinct", color: "bg-black text-white border-white/30" },
-  "EW": { label: "Extinct in Wild", color: "bg-purple-900 text-white border-purple-500/50" },
-  "CR": { label: "Critically Endangered", color: "bg-red-600 text-white border-red-500/50" },
-  "EN": { label: "Endangered", color: "bg-red-500 text-white border-red-400/50" },
-  "VU": { label: "Vulnerable", color: "bg-orange-500 text-white border-orange-400/50" },
-  "NT": { label: "Near Threatened", color: "bg-yellow-500 text-black border-yellow-400/50" },
-  "LC": { label: "Least Concern", color: "bg-green-600 text-white border-green-400/50" },
-  "DD": { label: "Data Deficient", color: "bg-gray-500 text-white border-gray-400/50" },
-  "NE": { label: "Not Evaluated", color: "bg-slate-600 text-slate-300 border-slate-500/50" }
+    "EX": { label: "Extinct", color: "bg-black text-white border-white/30" },
+    "EW": { label: "Extinct in Wild", color: "bg-purple-900 text-white border-purple-500/50" },
+    "CR": { label: "Critically Endangered", color: "bg-red-600 text-white border-red-500/50" },
+    "EN": { label: "Endangered", color: "bg-red-500 text-white border-red-400/50" },
+    "VU": { label: "Vulnerable", color: "bg-orange-500 text-white border-orange-400/50" },
+    "NT": { label: "Near Threatened", color: "bg-yellow-500 text-black border-yellow-400/50" },
+    "LC": { label: "Least Concern", color: "bg-green-600 text-white border-green-400/50" },
+    "DD": { label: "Data Deficient", color: "bg-gray-500 text-white border-gray-400/50" },
+    "NE": { label: "Not Evaluated", color: "bg-slate-600 text-slate-300 border-slate-500/50" }
 };
 
 const createNeonIcon = (color = '#39FF14') => {
-  return new L.DivIcon({
-    className: 'custom-neon-marker',
-    html: `<span class="material-symbols-outlined text-[30px]" style="color: ${color}; text-shadow: 0 0 15px ${color};">location_on</span>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
-  });
+    return new L.DivIcon({
+        className: 'custom-neon-marker',
+        html: `<span class="material-symbols-outlined text-[30px]" style="color: ${color}; text-shadow: 0 0 15px ${color};">location_on</span>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+    });
 };
 
 const userIcon = new L.DivIcon({
@@ -57,7 +58,7 @@ const Map = () => {
     const [selectedSpecies, setSelectedSpecies] = useState(null);
     const [loading, setLoading] = useState(false);
     const [scanStatus, setScanStatus] = useState("Enter a location to scan (e.g. Amazon Rainforest, Delhi)");
-    
+
     // Use ref to prevent initial useEffect loop
     const isFirstRun = useRef(true);
 
@@ -69,7 +70,7 @@ const Map = () => {
             setLoading(true);
             setScanStatus("TRIANGULATING TARGET...");
             setSelectedSpecies(null);
-            
+
             try {
                 const geoRes = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
                 if (geoRes.data.length > 0) {
@@ -94,7 +95,7 @@ const Map = () => {
     const fetchSpecies = async (lat, lon) => {
         setScanStatus(`SCANNING ${searchRadius}M RADIUS...`);
         setLoading(true);
-        
+
         // Convert radius (meters) to degrees approx (1 deg lat ~= 111km)
         const degreeDelta = searchRadius / 111000;
 
@@ -105,15 +106,15 @@ const Map = () => {
                 decimalLongitude: `${lon - degreeDelta},${lon + degreeDelta}`,
                 taxonKey: '1', // Kingdom Animalia
                 hasCoordinate: 'true',
-                mediaType: 'StillImage', 
-                limit: 50, 
+                mediaType: 'StillImage',
+                limit: 50,
             };
-            
+
             const res = await axios.get(gbifUrl, { params });
             const results = res.data.results;
-            
+
             setSpeciesList(results);
-            
+
             if (results.length > 0) {
                 setScanStatus(`${results.length} LIFEFORMS DETECTED`);
             } else {
@@ -148,13 +149,13 @@ const Map = () => {
     // --- RENDER ---
     return (
         <div className="font-sans bg-black text-slate-100 antialiased overflow-hidden h-screen w-full relative">
-            
+
             {/* BACKGROUND MAP */}
             <div className="absolute inset-0 z-0">
-                <MapContainer 
-                    center={center} 
-                    zoom={zoom} 
-                    zoomControl={false} 
+                <MapContainer
+                    center={center}
+                    zoom={zoom}
+                    zoomControl={false}
                     attributionControl={false}
                     style={{ height: "100%", width: "100%", background: "#050505" }}
                 >
@@ -163,16 +164,16 @@ const Map = () => {
 
                     {/* Scanning Radius Visualizer */}
                     {zoom > 8 && (
-                        <Circle 
+                        <Circle
                             center={center}
-                            pathOptions={{ 
-                                color: '#39FF14', 
-                                fillColor: '#39FF14', 
-                                fillOpacity: 0.05, 
-                                weight: 1, 
-                                dashArray: '5, 10' 
+                            pathOptions={{
+                                color: '#39FF14',
+                                fillColor: '#39FF14',
+                                fillOpacity: 0.05,
+                                weight: 1,
+                                dashArray: '5, 10'
                             }}
-                            radius={searchRadius} 
+                            radius={searchRadius}
                         />
                     )}
 
@@ -180,7 +181,7 @@ const Map = () => {
                     {speciesList.map((s) => {
                         const isRisk = ['CR', 'EN', 'VU'].includes(s.iucnRedListCategory);
                         return (
-                            <Marker 
+                            <Marker
                                 key={s.key}
                                 position={[s.decimalLatitude, s.decimalLongitude]}
                                 icon={createNeonIcon(isRisk ? '#FF007F' : '#39FF14')}
@@ -195,7 +196,7 @@ const Map = () => {
                     })}
                     <Marker position={center} icon={userIcon} />
                 </MapContainer>
-                
+
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
             </div>
@@ -206,10 +207,10 @@ const Map = () => {
                 <div className="flex items-center gap-3">
                     <div className="flex-1 glass-panel h-12 rounded-2xl flex items-center px-4 relative transition-all duration-300 focus-within:bg-white/10">
                         <span className="material-symbols-outlined text-primary mr-3 text-xl">search</span>
-                        <input 
-                            className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-slate-500 font-medium text-white focus:outline-none uppercase tracking-wider" 
+                        <input
+                            className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-slate-500 font-medium text-white focus:outline-none uppercase tracking-wider"
                             placeholder={scanStatus}
-                            type="text" 
+                            type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={handleSearch}
@@ -226,11 +227,11 @@ const Map = () => {
                             {searchRadius < 1000 ? `${searchRadius}m` : `${(searchRadius / 1000).toFixed(1)}km`}
                         </span>
                     </div>
-                    <input 
-                        type="range" 
-                        min="500" 
-                        max="10000" 
-                        step="500" 
+                    <input
+                        type="range"
+                        min="500"
+                        max="10000"
+                        step="500"
                         value={searchRadius}
                         onChange={(e) => setSearchRadius(Number(e.target.value))}
                         className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-green-400"
@@ -253,17 +254,20 @@ const Map = () => {
                         <span className="material-symbols-outlined">remove</span>
                     </button>
                 </div>
-                <button 
+                <button
                     className="size-12 glass-capsule flex items-center justify-center text-primary neon-glow-green border-primary/30 hover:bg-primary/20"
-                    onClick={() => {
-                        if (!navigator.geolocation) return;
-                        setScanStatus("LOCATING USER...");
-                        navigator.geolocation.getCurrentPosition(pos => {
-                             const { latitude, longitude } = pos.coords;
-                             setCenter([latitude, longitude]);
-                             setZoom(14);
-                             fetchSpecies(latitude, longitude);
-                        });
+                    onClick={async () => {
+                        try {
+                            setScanStatus("LOCATING USER...");
+                            const { latitude, longitude } = await getUserLocation();
+
+                            setCenter([latitude, longitude]);
+                            setZoom(14);
+                            fetchSpecies(latitude, longitude);
+                        } catch (err) {
+                            console.error(err);
+                            setScanStatus("LOCATION ACCESS DENIED");
+                        }
                     }}
                 >
                     <span className="material-symbols-outlined filled-icon">my_location</span>
@@ -277,11 +281,11 @@ const Map = () => {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
                         <div className="h-1.5 w-10 bg-white/10 rounded-full mx-auto mt-3 mb-1"></div>
-                        
+
                         <div className="p-5">
                             <div className="flex gap-4">
-                                <div 
-                                    className="w-24 h-24 rounded-2xl bg-cover bg-center border border-white/10 relative overflow-hidden shrink-0 shadow-lg" 
+                                <div
+                                    className="w-24 h-24 rounded-2xl bg-cover bg-center border border-white/10 relative overflow-hidden shrink-0 shadow-lg"
                                     style={{ backgroundImage: `url("${selectedSpecies.media?.[0]?.identifier || 'https://placehold.co/100x100/000/FFF?text=No+Img'}")` }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -301,7 +305,7 @@ const Map = () => {
                                     <p className="text-white/50 text-xs font-bold uppercase tracking-wide mt-0.5">
                                         {selectedSpecies.vernacularName || selectedSpecies.family || "Unknown Common Name"}
                                     </p>
-                                    
+
                                     <div className="mt-3 flex items-center gap-3 text-[10px] text-white/60">
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[12px]">calendar_today</span>
@@ -331,7 +335,7 @@ const Map = () => {
                     </div>
                 )}
             </div>
-            
+
             <Nav />
         </div>
     );

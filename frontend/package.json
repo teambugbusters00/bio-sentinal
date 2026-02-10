@@ -13,6 +13,7 @@
     "@capacitor/android": "^8.0.2",
     "@capacitor/cli": "^8.0.2",
     "@capacitor/core": "^8.0.2",
+    "@capacitor/geolocation": "^8.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.5",
     "leaflet": "^1.9.4",
