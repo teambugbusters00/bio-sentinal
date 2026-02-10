@@ -1,132 +1,204 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import '../css/alert.css';
 import Nav from '../components/Nav';
 
 const Alerts = () => {
+    const [alerts, setAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // --- 1. Fetch & Filter Logic ---
+    useEffect(() => {
+        const fetchSatelliteData = async () => {
+            try {
+                // Fetch more events (100) to increase chances of finding Indian events
+                const response = await axios.get('https://eonet.gsfc.nasa.gov/api/v3/events', {
+                    params: {
+                        status: 'open',
+                        limit: 100, 
+                    }
+                });
+
+                const rawEvents = response.data.events;
+                
+                // --- FILTER FOR INDIA ---
+                // India Bounding Box (Approximate):
+                // Lat: 6.0 to 37.0
+                // Lon: 68.0 to 97.0
+                const indianEvents = rawEvents.filter(event => {
+                    const geometry = event.geometry[event.geometry.length - 1]; // Get latest point
+                    // NASA Coordinates are [Longitude, Latitude]
+                    const lon = Array.isArray(geometry.coordinates[0]) ? geometry.coordinates[0][0] : geometry.coordinates[0];
+                    const lat = Array.isArray(geometry.coordinates[0]) ? geometry.coordinates[0][1] : geometry.coordinates[1];
+
+                    return (lat >= 6 && lat <= 37) && (lon >= 68 && lon <= 97);
+                });
+
+                const formattedAlerts = indianEvents.map(event => processEventData(event));
+                setAlerts(formattedAlerts);
+                setLoading(false);
+            } catch (err) {
+                console.error("NASA API Error:", err);
+                setError("Indian Satellite Uplink Failed");
+                setLoading(false);
+            }
+        };
+
+        fetchSatelliteData();
+    }, []);
+
+    // --- 2. Helper: Process Raw NASA Data ---
+    const processEventData = (event) => {
+        const categoryId = event.categories[0]?.id || 'unknown';
+        const lastGeometry = event.geometry[event.geometry.length - 1];
+        const date = new Date(lastGeometry.date);
+        
+        // Calculate "Time Ago"
+        const now = new Date();
+        const diffMs = now - date;
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const timeString = diffHrs < 24 ? `${diffHrs}h ago` : `${Math.floor(diffHrs / 24)}d ago`;
+
+        // Format Location
+        const coordinates = Array.isArray(lastGeometry.coordinates[0]) 
+            ? lastGeometry.coordinates[0] 
+            : lastGeometry.coordinates;
+        
+        const locString = `${coordinates[1].toFixed(2)}° N, ${coordinates[0].toFixed(2)}° E`;
+
+        return {
+            id: event.id,
+            title: event.title,
+            description: event.description || `Active ${event.categories[0].title.toLowerCase()} detected in Indian sector.`,
+            type: categoryId,
+            categoryLabel: event.categories[0].title,
+            timestamp: timeString,
+            location: locString,
+            link: event.sources[0]?.url,
+            style: getCategoryStyle(categoryId)
+        };
+    };
+
+    // --- 3. Helper: Style Mapper ---
+    const getCategoryStyle = (id) => {
+        if (['wildfires', 'volcanoes', 'severeStorms'].includes(id)) {
+            return {
+                card: "glass-card pulse-border-pink bg-hard-pink/[0.08]",
+                icon: "local_fire_department",
+                iconColor: "text-hard-pink",
+                labelColor: "text-hard-pink",
+                label: "Critical Alert"
+            };
+        }
+        if (['seaLakeIce', 'snow', 'floods'].includes(id)) {
+            return {
+                card: "glass-card bg-neon-green/[0.05] border-neon-green/20",
+                icon: "flood",
+                iconColor: "text-neon-green",
+                labelColor: "text-neon-green",
+                label: "Environmental Watch"
+            };
+        }
+        return {
+            card: "glass-card bg-white/[0.03] hover:bg-white/[0.05]",
+            icon: "warning",
+            iconColor: "text-white/40",
+            labelColor: "text-white/40",
+            label: "Active Event"
+        };
+    };
+
     return (
         <div className="text-white/90 font-sans min-h-screen bg-bg-dark selection:bg-neon-green/30">
             {/* Header */}
-                <div className="flex items-center pt-6 justify-between">
-                    <div className="flex-1 flex flex-col items-center">
-                        <h2 className="frosted-text text-lg font-bold tracking-tight">Alerts</h2>
-                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Bio Sentinel</span>
-                    </div>
+            <div className="flex items-center pt-6 justify-between px-6">
+                <div className="flex-1 flex flex-col items-center">
+                    <h2 className="frosted-text text-lg font-bold tracking-tight">Indian Sector</h2>
+                    <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">BioSentinel Network</span>
                 </div>
+            </div>
+
             <main className="p-6 space-y-6 max-w-md mx-auto pb-32">
-                {/* Card 1: Critical (Animated) */}
-                <div className="glass-card pulse-border-pink relative flex flex-col gap-4 rounded-3xl bg-hard-pink/[0.08] p-5 shadow-2xl">
-                    <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="material-symbols-outlined text-hard-pink text-sm">local_fire_department</span>
-                                <span className="text-hard-pink text-[10px] font-black uppercase tracking-[0.15em]">Critical Alert</span>
-                            </div>
-                            <h3 className="text-lg font-bold text-white tracking-tight">Active Wildfire Expansion</h3>
-                            <p className="text-sm text-white/60 mt-1 leading-relaxed">Rapid spread detected near conservation zone. Immediate intervention required.</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-white/30 whitespace-nowrap uppercase">2m ago</span>
+                
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                        <div className="w-12 h-12 border-4 border-white/10 border-t-neon-green rounded-full animate-spin"></div>
+                        <p className="text-xs font-mono text-white/50 animate-pulse">SCANNING INDIAN SUBCONTINENT...</p>
                     </div>
-                    <div className="flex items-center gap-5 py-3 border-y border-white/5">
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/40 text-sm">location_on</span>
-                            <span className="text-xs font-semibold text-white/80">Amazon Basin, Brazil</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/40 text-sm">verified</span>
-                            <span className="text-xs font-semibold text-white/80">98% Confidence</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex -space-x-2">
-                            <img alt="Ranger 1" className="h-7 w-7 rounded-full border border-white/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVlY8Q_KjzHX4pZO43jVR36ebLk8vnxnFV3GjAsabG-1HKMWn69P0MBbs2bkAWUG9gFPhCf9NDld8yzPbyWJSBC0Jy8V6FIBGktsEb7gkmCekVGiD7wCy57B5i35bWhUxsG0oUoBDKUmmQw2ZNtyviuPwMBoNE6erL3FU4X0_-CfsOj5wovFaEMjH-SgR8csO1ZV4T38tie6O2wPKBJe_FHMzDtvz2SPAC3bNHxf_oYTuR-cDgoTlpZFKfXJVTDBQ_SYOqsmvCs3pK" />
-                            <img alt="Ranger 2" className="h-7 w-7 rounded-full border border-white/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb8_zqfjnhdhwX4lB40TmdmceJNBfv_jM1OfSPX_ZD8XsIOg17OJKLcQRJAyM71e-y6VJuL7NBbo6lbcXUM_1Cw0BMhvuUToCqM2ZmHcZ5eBn_QG6xM8b8GliBcTedQwLFvY483H_K9FCHEXFnft-hU5Mv-Fcp84dd_WfUhg8cpL_ffNQEu13C1EZ0apIpyel5q11ti1IJ1zdrJ_avmgsmyJ8Ev43a8d_260scl-KEFS1jR5EDO_9xt2HEDNU80fhWWw75uCZSqGWO" />
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 border border-white/20 text-[9px] font-bold text-white">
-                                +12
-                            </div>
-                        </div>
-                        <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-white/10">
-                            View Data
-                            <span className="material-symbols-outlined text-sm">chevron_right</span>
-                        </button>
-                    </div>
-                </div>
+                )}
 
-                {/* Card 2: At Risk (Image) */}
-                <div className="glass-card relative flex flex-col gap-4 rounded-3xl bg-white/[0.03] p-5 hover:bg-white/[0.05] transition-colors">
-                    <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="material-symbols-outlined text-white/40 text-sm">agriculture</span>
-                                <span className="text-white/40 text-[10px] font-black uppercase tracking-[0.15em]">At Risk</span>
-                            </div>
-                            <h3 className="text-lg font-bold text-white tracking-tight">Illegal Logging Activity</h3>
-                            <p className="text-sm text-white/60 mt-1">Heavy machinery acoustic signatures detected.</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-white/30 uppercase">45m ago</span>
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-center">
+                        <p className="text-red-400 text-xs font-bold">{error}</p>
                     </div>
-                    
-                    {/* Fixed Style Object */}
-                    <div 
-                        className="w-full h-32 rounded-2xl overflow-hidden relative border border-white/10" 
-                        style={{ 
-                            backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAnVByCpSFRx28yda30qEwY997afkz2BiOjtC73UPOnU2Brq99FGiXqMY7XLLu6hgb5mpnbZIFRGR-EfxOV-TZXx_QN7lmKklqvGLMbSIxBbmXLRCufrehFVLNMm5_n9Mo3NH-j6XbmR3R2YjxlNAZ2onOa33RHGdYsx_GI6iipQ2KJzCsipXM1sRiiSgzFKmhgXYdLkIKrc3WbOo3L8jIc-z2LxTT0-OW6zLOc_uWv0WgAI9EyNIvbZBw1mOb5SLdPhPzOb6F_F1gf")', 
-                            backgroundSize: 'cover', 
-                            backgroundPosition: 'center' 
-                        }}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div className="absolute bottom-3 left-3 text-[9px] text-white/90 font-bold flex items-center gap-1.5 uppercase tracking-widest">
-                            <span className="material-symbols-outlined text-[12px]">satellite_alt</span>
-                            Satellite · 09:14 UTC
-                        </div>
-                    </div>
+                )}
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/40 text-sm">location_on</span>
-                            <span className="text-xs font-semibold text-white/80">Boreal, Canada</span>
-                        </div>
-                        <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/80 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-white/10">
-                            Deploy Drone
-                            <span className="material-symbols-outlined text-sm">flight_takeoff</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Card 3: Positive (Green Glow) */}
-                <div className="glass-card relative flex flex-col gap-4 rounded-3xl bg-neon-green/[0.05] p-5 shadow-[0_0_30px_rgba(57,255,20,0.05)] border-neon-green/20">
-                    <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="material-symbols-outlined text-neon-green text-sm">eco</span>
-                                <span className="text-neon-green text-[10px] font-black uppercase tracking-[0.15em]">Positive Event</span>
+                {/* Alerts List */}
+                {!loading && !error && alerts.map((alert) => (
+                    <div key={alert.id} className={`relative flex flex-col gap-4 rounded-3xl p-5 shadow-2xl transition-all duration-300 ${alert.style.card}`}>
+                        
+                        <div className="flex justify-between items-start">
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={`material-symbols-outlined text-sm ${alert.style.iconColor}`}>
+                                        {alert.style.icon}
+                                    </span>
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${alert.style.labelColor}`}>
+                                        {alert.style.label}
+                                    </span>
+                                </div>
+                                <h3 className="text-lg font-bold text-white tracking-tight leading-tight pr-4">
+                                    {alert.title}
+                                </h3>
+                                <span className="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-white/60 w-fit">
+                                    {alert.categoryLabel}
+                                </span>
                             </div>
-                            <h3 className="text-lg font-bold text-white tracking-tight">Snow Leopard Sightings</h3>
-                            <p className="text-sm text-white/60 mt-1 leading-relaxed">Multiple individuals recorded on trail cameras in protected sector.</p>
+                            <span className="text-[10px] font-bold text-white/30 whitespace-nowrap uppercase">
+                                {alert.timestamp}
+                            </span>
                         </div>
-                        <span className="text-[10px] font-bold text-white/30 uppercase">3h ago</span>
+
+                        <div className="flex items-center gap-5 py-3 border-y border-white/5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-white/40 text-sm">satellite_alt</span>
+                                <span className="text-xs font-semibold text-white/80">{alert.location}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] text-white/40 italic">
+                                Source: NASA EONET
+                            </p>
+                            <a 
+                                href={alert.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-white/10"
+                            >
+                                Satellite View
+                                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                            </a>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-5 py-3 border-y border-white/5">
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/40 text-sm">location_on</span>
-                            <span className="text-xs font-semibold text-white/80">Himalayas, Nepal</span>
+                ))}
+
+                {/* Empty State Specific to India */}
+                {!loading && alerts.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-10 space-y-4 opacity-60">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                            <span className="material-symbols-outlined text-3xl text-neon-green">verified_user</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/40 text-sm">groups</span>
-                            <span className="text-xs font-semibold text-white/80">Citizen Science</span>
+                        <div className="text-center">
+                            <h3 className="text-white font-bold text-sm uppercase tracking-widest">Sector Secure</h3>
+                            <p className="text-white/50 text-xs mt-1 max-w-[200px] mx-auto">No active NASA alerts detected over the Indian Subcontinent at this time.</p>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                            <span className="px-2.5 py-1 bg-neon-green/10 text-neon-green text-[9px] font-black rounded-lg border border-neon-green/20 uppercase">Rare Species</span>
-                            <span className="px-2.5 py-1 bg-white/5 text-white/40 text-[9px] font-black rounded-lg border border-white/10 uppercase">Verified</span>
-                        </div>
-                        <button className="flex items-center gap-2 bg-neon-green text-black px-4 py-2 rounded-xl text-xs font-black shadow-[0_0_15px_rgba(57,255,20,0.3)] active:scale-95 transition-all hover:bg-neon-green/90">
-                            Contribute
-                            <span className="material-symbols-outlined text-sm">add_a_photo</span>
-                        </button>
-                    </div>
-                </div>
+                )}
+
             </main>
 
             <Nav />
