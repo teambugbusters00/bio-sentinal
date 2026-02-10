@@ -17,7 +17,7 @@ const NavItem = ({ to, icon, label }) => (
   </NavLink>
 );
 
-const Nav = () => {
+const Nav = ({species}) => {
   const location = useLocation();
   const [isChatOpen, setIsChatOpen] = useState(true);
 
@@ -40,7 +40,7 @@ const Nav = () => {
         <div className={`absolute bottom-full left-0 w-full mb-4 transition-all duration-300 origin-bottom ${isChatOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}>
           {isChatOpen && (
             <div className="relative">
-              <ChatInterface onClose={handleCloseChat} />
+              <ChatInterface onClose={handleCloseChat} species={species}/>
             </div>
           )}
         </div>

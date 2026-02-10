@@ -348,7 +348,7 @@ const SpeciesDetail = () => {
             </div>
         </div>
         
-        <Navbar />
+        <Navbar species={sighting.scientificName || sighting.species}/>
     </div>
   );
 };
