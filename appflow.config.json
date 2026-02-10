@@ -1,0 +1,11 @@
+{
+  "apps": [
+    {
+      "appId": "Bio-Sentinal",
+      "root": "frontend",
+      "dependencyInstallCommand": "npm install",
+      "webBuildCommand": "npm run build",
+      "androidPath": "android"
+    }
+  ]
+}

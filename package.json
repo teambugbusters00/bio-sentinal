@@ -1,5 +1,5 @@
 {
-  "name": "my-monorepo",
+  "name": "bio-sentinal",
   "private": true,
   "scripts": {
     "install": "cd frontend && npm install",
