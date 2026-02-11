@@ -1,22 +1,33 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../css/dashboard.css';
 import Nav from '../components/Nav';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, logOut } = useAuth();
+    const navigate = useNavigate();
     
     // Get user info from local auth object
     const userName = user?.name || 'Guest';
     const userEmail = user?.email || '';
     const userId = user?.id || '000000';
 
+    const handleLogin = () => {
+        navigate('/login');
+    };
+
+    const handleLogout = () => {
+        logOut();
+        navigate('/');
+    };
+
     return (
         <div className="min-h-screen pb-28 font-sans selection:bg-primary/30">
             {/* Header */}
             <div className="flex items-center pt-6 justify-between">
                 <div className="flex-1 flex flex-col items-center">
-                    <h2 className="frosted-text text-lg font-bold tracking-tight">Kaya</h2>
+                    <h2 className="frosted-text text-lg font-bold tracking-tight">Bio Sentinal</h2>
                     <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Dashboard</span>
                 </div>
             </div>
@@ -87,6 +98,26 @@ const Dashboard = () => {
                     </div>
                 </section>
             </main>
+
+            <div className="max-w-md mx-auto px-5 pb-6">
+                {user ? (
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full glass-panel rounded-2xl py-3 text-sm font-bold uppercase tracking-[0.2em] text-white/80 transition-all duration-300 hover:text-accent-pink"
+                    >
+                        Logout
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleLogin}
+                        className="w-full glass-panel rounded-2xl py-3 text-sm font-bold uppercase tracking-[0.2em] text-white/80 transition-all duration-300 hover:text-primary"
+                    >
+                        Login
+                    </button>
+                )}
+            </div>
 
             <Nav />
         </div>

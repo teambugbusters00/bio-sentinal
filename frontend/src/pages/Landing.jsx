@@ -17,11 +17,11 @@ const Landing = () => {
               </div>
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-pink/20 border border-accent-pink/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent-pink animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-green animate-pulse"></span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-accent-pink">Bio Sentinel Live</span>
                 </div>
                 <h1 className="text-4xl font-extrabold text-white leading-[1.1] tracking-tight">
-                  <span className="text-primary-green">Kaya</span> <br /> Detect, Protect & Preserve.
+                  <span className="text-primary-green">Bio Sentinal</span> <br /> Detect, Protect & Preserve.
                 </h1>
                 <p className="text-white/70 text-base leading-relaxed max-w-xs">
                   Government-grade AI monitoring for planetary biodiversity and ecological shifts.

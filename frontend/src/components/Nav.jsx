@@ -19,7 +19,7 @@ const NavItem = ({ to, icon, label }) => (
 );
 
 const Nav = ({species}) => {
-  const { user, logOut } = useAuth();
+  const { logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -74,6 +74,7 @@ const Nav = ({species}) => {
 
           <NavItem to="/" icon="home" label="Home" />
           <NavItem to="/map" icon="map" label="Map" />
+          <NavItem to="/alert" icon="notifications" label="Alerts" />
 
           {/* Floating Report Button */}
           <div className="relative mx-2">
@@ -94,21 +95,8 @@ const Nav = ({species}) => {
             </NavLink>
           </div>
 
-          <NavItem to="/alert" icon="notifications" label="Alerts" />
           <NavItem to="/satellite" icon="satellite_alt" label="Sat" />
           <NavItem to="/team" icon="groups" label="Team" />
-          {user ? (
-            <button
-              onClick={handleLogout}
-              className="flex flex-col items-center justify-center w-12 h-12 transition-all duration-300 text-white/40 hover:text-accent-pink hover:scale-110"
-              title="Logout"
-            >
-              <span className="material-symbols-outlined mb-0.5 text-2xl">logout</span>
-              <span className="text-[9px] font-bold uppercase tracking-widest">Logout</span>
-            </button>
-          ) : (
-            <NavItem to="/login" icon="login" label="Login" />
-          )}
           <NavItem to="/dashboard" icon="dashboard" label="Dash" />
 
         </div>

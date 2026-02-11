@@ -1,5 +1,9 @@
 import React from 'react';
 import Nav from '../components/Nav';
+import Aayush from '../assets/aayush.png';
+import Preeti from '../assets/preeti.png';
+import Vijay from '../assets/vijay.png';
+import Raj from '../assets/raj.png';
 
 const teamMembers = [
   {
@@ -7,28 +11,28 @@ const teamMembers = [
     role: 'Project Lead & Lead Developer',
     bio: 'Leading the Bio Sentinel project with expertise in environmental monitoring and full-stack development.',
     linkedin: 'https://www.linkedin.com/in/vijay----jangid/',
-    image: '../assets/vijay.png'
+    image: Vijay
   },
   {
     name: 'Preeti Yadav',
     role: 'researcher and manager',
     bio: 'Active speaker | Host | Anchor | Event manager',
     linkedin: 'https://www.linkedin.com/in/preeti-yadav-097796301/',
-    image: '../assets/preeti.png'
+    image: Preeti
   },
   {
     name: 'Aayush Laddha',
     role: 'Full Stack Developer',
     bio: 'React, Node, LangChain | Building AI + IoT Systems | Intern @ Klyro Labs',
     linkedin: 'https://www.linkedin.com/in/imagiwaeve/',
-    image: '../assets/aayush.png'
+    image: Aayush
   },
   {
     name: 'Raghav Raj',
     role: 'ux researcher and project manager',
     bio: 'CAD || UX/CX Researcher || Project Management || Product Management || NIT Delhi',
     linkedin: 'https://www.linkedin.com/in/raghav-raj-39kumar/',
-    image: 'https://unavatar.io/linkedin/raghav-raj-39kumar'
+    image: Raj
   }
 ];
 
@@ -38,7 +42,7 @@ const Team = () => {
       {/* Header */}
       <div className="flex items-center pt-6 justify-between">
         <div className="flex-1 flex flex-col items-center">
-          <h2 className="frosted-text text-lg font-bold tracking-tight">Kaya</h2>
+          <h2 className="frosted-text text-lg font-bold tracking-tight">Bio Sentinal</h2>
           <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Our Team</span>
         </div>
       </div>
