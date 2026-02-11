@@ -1,17 +1,13 @@
 services:
-  # Node.js Backend
-    - type: web
+  - type: web
     name: bio-sentinal-api
-    directory: ai
-    runtime: node
+    env: node
     region: oregon
-    repo: https://github.com/eags-aayush/bio-sentinal.git
-    branch: main
+    rootDir: ai
+    healthCheckPath: /health
     buildCommand: npm install
     startCommand: node app.js
     envVars:
-      - key: PORT
-        value: "3000"
       - key: MONGODB_URI
         fromDatabase:
           name: biosentinal-mongodb
@@ -21,19 +17,14 @@ services:
       - key: NASA_FIRMS_API_KEY
         sync: false
 
-  # Python FastAPI Service (GBIF + Satellite)
   - type: web
     name: bio-sentinal-ml-api
-    directory: ai
-    runtime: python
+    env: python
     region: oregon
-    repo: https://github.com/eags-aayush/bio-sentinal.git
-    branch: main
+    rootDir: ai
+    healthCheckPath: /health
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn gbif_ml_api:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: PORT
-        value: "8000"
 
 databases:
   - name: biosentinal-mongodb
