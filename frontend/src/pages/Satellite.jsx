@@ -5,7 +5,7 @@ import Nav from '../components/Nav';
 
 // API URL - Use main API URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const SATELLITE_API_URL = import.meta.env.GBIF_API_URL || 'http://localhost:8000';
+const GBIF_API_URL = import.meta.env.GBIF_API_URL || 'http://localhost:8000';
 
 // Preset regions
 const PRESET_REGIONS = {
