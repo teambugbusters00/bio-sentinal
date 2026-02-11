@@ -14,7 +14,7 @@ const Alerts = () => {
     const fetchAlerts = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3000/api/alerts');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/alerts`);
             if (!response.ok) {
                 throw new Error('Failed to fetch alerts');
             }
