@@ -3,10 +3,6 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Nav from '../components/Nav';
 
-// API URL - Use main API URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const GBIF_API_URL = import.meta.env.GBIF_API_URL || 'http://localhost:8000';
-
 // Preset regions
 const PRESET_REGIONS = {
     'India': { minLat: 6.0, maxLat: 37.0, minLon: 68.0, maxLon: 97.0 },
@@ -41,7 +37,7 @@ const Satellite = () => {
                 .filter(([_, enabled]) => enabled)
                 .map(([layer]) => layer);
 
-            const response = await fetch(`${GBIF_API_URL}/satellite/analyze`, {
+            const response = await fetch(`${import.meta.env.VITE_GBIF_API_URL}/satellite/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
