@@ -3,7 +3,7 @@ services:
   - name: biosentinal-api
     runtime: node
     region: oregon
-    repo: https://github.com/teambugbusters00/riverathonapp.git
+    repo: https://github.com/eags-aayush/bio-sentinal.git
     branch: main
     directory: bio-sentinal-main/ai
     buildCommand: npm install
@@ -24,7 +24,7 @@ services:
   - name: biosentinal-ml-api
     runtime: python
     region: oregon
-    repo: https://github.com/teambugbusters00/riverathonapp.git
+    repo: https://github.com/eags-aayush/bio-sentinal.git
     branch: main
     directory: bio-sentinal-main/ai
     buildCommand: pip install -r requirements.txt
