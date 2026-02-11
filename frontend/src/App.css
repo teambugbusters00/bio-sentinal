@@ -9,20 +9,20 @@ body {
 
 @theme {
   --color-primary-green: #22ff88;
-  --color-accent-pink: #ff2288;
+  --color-accent-pink: #FDF2F7;
   --color-dark-start: #0f1115;
   --color-dark-end: #151922;
   --radius-glass: 20px;
 
   --color-primary: "#39FF14", 
-  --color-accent: "#FF007F",  
+  --color-accent: "#FDF2F7",  
   --color-bg-dark: "#050a05",
 
   --color-bg-gradient-start: "#1a1a2e",
   --color-bg-gradient-end: "#05070a",
 
   --color-neon-green: "#39FF14",
-  --colorhard-pink: "#FF007F",
+  --colorhard-pink: "#FDF2F7",
 
   --border-glass-border: "rgba(255, 255, 255, 0.1)",
 }

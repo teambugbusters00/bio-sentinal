@@ -26,15 +26,15 @@
    or put them inside if you want them to behave like standard utilities. */
 
 .neon-glow-green {
-  box-shadow: 0 0 15px rgba(57, 255, 20, 0.6), inset 0 0 5px rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 15px rgba(121, 48, 81, 0.6), inset 0 0 5px rgba(253, 242, 247, 0.4);
 }
 
 .neon-glow-pink {
-  box-shadow: 0 0 15px rgba(255, 0, 127, 0.6), inset 0 0 5px rgba(255, 0, 127, 0.4);
+  box-shadow: 0 0 15px rgba(23, 7, 82, 0.6), inset 0 0 5px rgba(253, 242, 247, 0.4);
 }
 
 .neon-glow-amber {
-  box-shadow: 0 0 15px rgba(255, 191, 0, 0.6), inset 0 0 5px rgba(255, 191, 0, 0.4);
+  box-shadow: 0 0 15px rgba(253, 242, 247, 0.6), inset 0 0 5px rgba(253, 242, 247, 0.4);
 }
 
 /* Material Symbols Setup */

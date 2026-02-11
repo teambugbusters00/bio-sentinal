@@ -29,8 +29,8 @@ const ChatBubble = ({ text, sender, timestamp }) => {
           </ReactMarkdown>
         </div>
       </div>
-      <span className="text-[9px] font-mono text-white/30 mt-1 uppercase tracking-wider">
-        {sender === 'model' ? 'BIO SENTINEL' : 'YOU'} • {timestamp}
+      <span className="text-[10px] font-mono mt-1 uppercase tracking-wider">
+        {sender === 'model' ? 'KAYA' : 'YOU'} • {timestamp}
       </span>
     </div>
   );
@@ -101,7 +101,7 @@ const ChatInterface = ({ onClose, species }) => {
       }
 
       // 5. API Call
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/chat`, payload);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/chat`, payload);
 
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
@@ -133,8 +133,8 @@ const ChatInterface = ({ onClose, species }) => {
             <div className={`w-2.5 h-2.5 rounded-full ${isTyping ? 'bg-yellow-400' : 'bg-primary-green'} animate-pulse shadow-[0_0_10px_currentColor]`}></div>
           </div>
           <div>
-            <h2 className="text-xs font-bold text-white tracking-[0.2em] uppercase leading-none mb-0.5">BioSentinel AI</h2>
-            <p className="text-[8px] font-mono text-primary/80 tracking-wide truncate max-w-[150px]">
+            <h2 className="text-xs font-bold text-white tracking-[0.2em] uppercase leading-none mb-0.5">Kaya AI</h2>
+            <p className="text-[10px] font-mono tracking-wide truncate max-w-[150px]">
               ID: {sessionRef.current?.slice(-6).toUpperCase()}
             </p>
           </div>
@@ -143,7 +143,7 @@ const ChatInterface = ({ onClose, species }) => {
         {/* Close Button */}
         <button 
           onClick={onClose} 
-          className="flex items-center justify-center w-8 h-8 rounded-full border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-500 text-white/50 transition-all"
+          className="flex items-center justify-center w-8 h-8 rounded-full border bg-red-500/20 border-red-500/50 text-red-500 hover:cursor-pointer transition-all"
         >
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
@@ -166,7 +166,7 @@ const ChatInterface = ({ onClose, species }) => {
                 <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce delay-300"></div>
               </div>
             </div>
-            <span className="text-[9px] font-mono text-white/30 mt-1 uppercase tracking-wider ml-1">PROCESSING DATA...</span>
+            <span className="text-[10px] font-mono mt-1 uppercase tracking-wider ml-1">PROCESSING DATA...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -179,7 +179,7 @@ const ChatInterface = ({ onClose, species }) => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about diet, habitat, threats..."
+            placeholder="Ask about anything biodiversity..."
             disabled={isTyping}
             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all font-mono disabled:opacity-50"
           />

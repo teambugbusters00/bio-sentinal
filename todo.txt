@@ -4,3 +4,8 @@
 ✔ Chatbot
 Nearest animal hospital
 Finading natural habitat for a species
+
+What you need to set
+
+In Render (Node service env vars), add ML_API_URL with your Python service URL, e.g. https://biosentinal-ml-api.onrender.com.
+If you run locally, set ML_API_URL=http://localhost:8000.
