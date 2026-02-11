@@ -1,6 +1,7 @@
 import React from 'react';
 import '../css/dashboard.css';
 import Nav from '../components/Nav';
+import LogoutButton from '../components/LogoutButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -187,6 +188,7 @@ const ResearcherDashboard = () => {
                         <span className="text-white/30">→</span>
                     </button>
                 </section>
+                <LogoutButton />
             </main>
 
             <Nav />

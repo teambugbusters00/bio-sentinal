@@ -1,8 +1,3 @@
-// MongoDB-based authentication API
-
-// Use environment variable or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
 // User Roles
 export const ROLES = {
     STUDENT: 'student',
@@ -21,7 +16,7 @@ const getStoredUser = () => {
 
 // Sign up with email/password
 export const signUpWithEmail = async (name, email, password) => {
-    const response = await fetch(`${API_URL}/api/auth/signup`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -44,7 +39,7 @@ export const signUpWithEmail = async (name, email, password) => {
 
 // Sign in with email/password
 export const signInWithEmail = async (email, password) => {
-    const response = await fetch(`${API_URL}/api/auth/signin`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signin`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -77,7 +72,7 @@ export const getCurrentUser = async () => {
     if (!token) return null;
 
     try {
-        const response = await fetch(`${API_URL}/api/auth/me`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -131,7 +126,7 @@ export const updateUserProfile = async (profileData) => {
     const token = getToken();
     if (!token) throw new Error('Not logged in');
 
-    const response = await fetch(`${API_URL}/api/auth/profile`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

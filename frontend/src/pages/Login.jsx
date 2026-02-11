@@ -58,10 +58,10 @@ const Login = () => {
         }
     };
 
-    // Mock Google Sign In (for demo - would need Google OAuth backend)
-    const handleGoogleSignIn = async () => {
-        setError('Google Sign-In requires backend OAuth setup. Use email/password for now.');
-    };
+    // // Mock Google Sign In (for demo - would need Google OAuth backend)
+    // const handleGoogleSignIn = async () => {
+    //     setError('Google Sign-In requires backend OAuth setup. Use email/password for now.');
+    // };
 
     if (user) {
         return <Navigate to={profileComplete ? (user.role ? `/dashboard/${user.role}` : '/dashboard') : '/profile-setup'} replace />;
@@ -135,14 +135,13 @@ const Login = () => {
                     </button>
                 </form>
 
-                {/* Divider */}
-                <div className="flex items-center gap-4 my-6">
+                {/* Divider  and Google Sign In */}
+                {/* <div className="flex items-center gap-4 my-6">
                     <div className="flex-1 h-px bg-white/10"></div>
                     <span className="text-white/30 text-xs">OR</span>
                     <div className="flex-1 h-px bg-white/10"></div>
                 </div>
 
-                {/* Google Sign In */}
                 <button
                     onClick={handleGoogleSignIn}
                     disabled={loading}
@@ -155,7 +154,7 @@ const Login = () => {
                         <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Continue with Google
-                </button>
+                </button> */}
 
                 {/* Toggle Sign In/Sign Up */}
                 <div className="mt-6 text-center">
@@ -167,16 +166,6 @@ const Login = () => {
                         className="text-white/50 hover:text-white text-sm transition-colors"
                     >
                         {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-                    </button>
-                </div>
-
-                {/* Back to Home */}
-                <div className="mt-8 text-center">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="text-white/40 hover:text-white/60 text-xs transition-colors"
-                    >
-                        ← Back to Home
                     </button>
                 </div>
             </div>

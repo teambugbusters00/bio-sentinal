@@ -3,6 +3,7 @@ import '../css/dashboard.css';
 import Nav from '../components/Nav';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import LogoutButton from '../components/LogoutButton';
 
 const CommunityDashboard = () => {
     const { user, getRoleEmoji } = useAuth();
@@ -203,6 +204,7 @@ const CommunityDashboard = () => {
                         </button>
                     </div>
                 </section>
+                <LogoutButton />
             </main>
 
             <Nav />
