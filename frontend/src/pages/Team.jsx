@@ -2,7 +2,7 @@ import React from 'react';
 import Nav from '../components/Nav';
 import Aayush from '../assets/aayush.png';
 import Preeti from '../assets/preeti.png';
-import Vijay from '../assets/vijay.png';
+import Vijayj from '../assets/vijayj.png';
 import Raj from '../assets/raj.png';
 
 const teamMembers = [
@@ -11,7 +11,7 @@ const teamMembers = [
     role: 'Project Lead & Lead Developer',
     bio: 'Leading the Bio Sentinel project with expertise in environmental monitoring and full-stack development.',
     linkedin: 'https://www.linkedin.com/in/vijay----jangid/',
-    image: Vijay
+    image: Vijayj
   },
   {
     name: 'Preeti Yadav',
