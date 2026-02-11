@@ -1,6 +1,7 @@
 services:
   # Node.js Backend
-  - name: biosentinal-api
+  - name: bio-sentinal-api
+    directory: ai
     runtime: node
     region: oregon
     repo: https://github.com/eags-aayush/bio-sentinal.git
@@ -21,7 +22,8 @@ services:
         sync: false
 
   # Python FastAPI Service (GBIF + Satellite)
-  - name: biosentinal-ml-api
+  - name: bio-sentibal-ml-api
+    directory: ai
     runtime: python
     region: oregon
     repo: https://github.com/eags-aayush/bio-sentinal.git
