@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,7 +10,6 @@ import Navbar from '../components/Nav';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Override default icon with a cleaner look if needed, or keep standard
 let DefaultIcon = L.icon({
     iconUrl: icon,
     shadowUrl: iconShadow,
@@ -40,13 +39,11 @@ const SpeciesDetail = () => {
     const [speciesInfo, setSpeciesInfo] = useState(null);
     const [wikiData, setWikiData] = useState(null);
     const [indiaSightings, setIndiaSightings] = useState([]);
+    const [aiData, setAiData] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('natural_history');
 
-    const [aiData, setAiData] = useState(null);
-
-    // 1. Fetch Main Details
     useEffect(() => {
         const fetchDeepData = async () => {
             try {
@@ -69,45 +66,35 @@ const SpeciesDetail = () => {
                     setWikiData(wikiRes.data);
                 } catch (e) { console.log("Wiki data missing"); }
 
-                const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-                const prompt = `
-  For the species "${cleanName}", return a strict JSON object with these 3 keys:
-  1. "favourable_climate": A string describing their ideal environment.
-  2. "dos_and_donts": An array of strings regarding human interaction.
-  3. "conservation_methods": An array of strings on how to conserve them.
-  Return ONLY valid JSON. No Markdown formatting.
-`;
-
+                // --- D. AI DATA (VIA BACKEND) ---
                 try {
-                    const aiRes = await axios.post(
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiApiKey}`,
-                        {
-                            contents: [{ parts: [{ text: prompt }] }]
-                        }
-                    );
+                    // Use API URL from .env or fallback to localhost
+                    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                    
+                    const aiRes = await axios.post(`${apiUrl}/api/species`, {
+                        speciesName: cleanName
+                    });
 
-                    // Parse the JSON text from the AI response
-                    const rawText = aiRes.data.candidates[0].content.parts[0].text;
-                    const jsonText = rawText.replace(/```json|```/g, '').trim(); // Cleanup markdown if present
-                    setAiData(JSON.parse(jsonText));
+                    setAiData(aiRes.data);
 
                 } catch (e) {
-                    console.log("AI Data fetch failed", e);
-                    // Fallback data so UI doesn't break
+                    console.error("AI Data fetch failed:", e);
+                    // Fallback Data
                     setAiData({
-                        favourable_climate: "Data unavailable",
-                        dos_and_donts: [],
-                        conservation_methods: []
+                        favourable_climate: "Data currently unavailable via BioSentinel Uplink.",
+                        dos_and_donts: ["Do not disturb"],
+                        conservation_methods: ["Monitor local population"]
                     });
                 }
 
             } catch (error) { console.error(error); }
             setLoading(false);
         };
+
         fetchDeepData();
     }, [id]);
 
-    // 2. Fetch India Distribution
+    // 2. Fetch India Distribution (Dependent on sighting data)
     useEffect(() => {
         if (sighting && sighting.taxonKey) {
             const fetchIndiaData = async () => {
@@ -130,7 +117,7 @@ const SpeciesDetail = () => {
     if (loading) return (
         <div className="min-h-screen bg-bg-dark flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-                <span className="material-symbols-outlined text-primary text-5xl animate-spin">genetics</span>
+                <span className="material-symbols-outlined text-primary-green text-5xl animate-spin">genetics</span>
                 <span className="text-white/50 text-sm tracking-widest font-mono">FETCHING SPECIES DATA...</span>
             </div>
         </div>
@@ -144,15 +131,25 @@ const SpeciesDetail = () => {
     const statusObj = conservationDict[statusKey] || conservationDict["NE"];
     const position = [sighting.decimalLatitude, sighting.decimalLongitude];
 
+    // Construct object for Chat Interface context
+    const speciesContextObj = {
+        name: commonName,
+        scientificName: sighting.scientificName,
+        kingdom: sighting.kingdom,
+        status: statusObj.label,
+        description: wikiData?.extract || "No wiki data",
+        ...aiData // Spread AI insights into context
+    };
+
     return (
-        <div className="min-h-screen pb-32 font-sans text-white/90 bg-bg-dark selection:bg-primary/30">
+        <div className="min-h-screen pb-32 font-sans text-white/90 bg-bg-dark selection:bg-primary-green/30">
             <div className="max-w-7xl mx-auto px-4 mt-8">
 
                 {/* HERO BANNER */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-white/10 glass-panel mb-8">
                     {/* Image Section */}
                     <div className="relative h-72 lg:h-auto bg-black">
-                        <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
                         <img
                             src={wikiData?.thumbnail?.source || sighting.media?.[0]?.identifier || "https://placehold.co/600x400/000/FFF?text=No+Signal"}
                             alt="Species"
@@ -189,7 +186,7 @@ const SpeciesDetail = () => {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`pb-4 px-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap ${activeTab === tab
-                                ? 'border-b-2 border-primary text-primary neon-glow'
+                                ? 'border-b-2 border-primary-green text-primary-green drop-shadow-[0_0_8px_rgba(57,255,20,0.5)]'
                                 : 'text-white/30 hover:text-white border-b-2 border-transparent'
                                 }`}
                         >
@@ -209,7 +206,7 @@ const SpeciesDetail = () => {
                             <div className="glass-panel p-8 bg-white/[0.02] border-white/10 space-y-8 animate-in fade-in slide-in-from-bottom-4">
                                 <div>
                                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary">genetics</span>
+                                        <span className="material-symbols-outlined text-primary-green">genetics</span>
                                         Biological Context
                                     </h3>
                                     <p className="text-sm leading-7 text-white/60 font-light">
@@ -224,14 +221,14 @@ const SpeciesDetail = () => {
                                             {['kingdom', 'phylum', 'class', 'order', 'family'].map((rank) => (
                                                 <li key={rank} className="flex justify-between border-b border-white/5 pb-1 last:border-0">
                                                     <span className="text-white/30 capitalize">{rank}</span>
-                                                    <span className="text-primary font-bold">{sighting[rank]}</span>
+                                                    <span className="text-primary-green font-bold">{sighting[rank]}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
 
-                                    <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20">
-                                        <h4 className="font-bold text-primary/60 mb-2 text-[10px] uppercase tracking-widest">Scientific Authority</h4>
+                                    <div className="bg-primary-green/5 p-5 rounded-2xl border border-primary-green/20">
+                                        <h4 className="font-bold text-primary-green/60 mb-2 text-[10px] uppercase tracking-widest">Scientific Authority</h4>
                                         <p className="text-xs text-white/50 mb-2">First described by:</p>
                                         <p className="text-lg font-serif italic text-white">
                                             {speciesInfo?.authorship || sighting.scientificNameAuthorship || "Unknown Author"}
@@ -247,7 +244,7 @@ const SpeciesDetail = () => {
                                 <div className="mb-4 px-2">
                                     <h3 className="text-lg font-bold text-white">India Distribution</h3>
                                     <p className="text-xs text-white/50">
-                                        Displaying <span className="text-primary font-bold">{indiaSightings.length}</span> confirmed geospatial points.
+                                        Displaying <span className="text-primary-green font-bold">{indiaSightings.length}</span> confirmed geospatial points.
                                     </p>
                                 </div>
 
@@ -299,7 +296,7 @@ const SpeciesDetail = () => {
 
                                         {/* Climate */}
                                         <div className="col-span-full bg-white/5 p-4 rounded-xl border border-white/10">
-                                            <h4 className="text-primary font-bold text-xs uppercase tracking-widest mb-2">
+                                            <h4 className="text-primary-green font-bold text-xs uppercase tracking-widest mb-2">
                                                 <span className="material-symbols-outlined align-middle mr-2 text-sm">thermostat</span>
                                                 Favourable Environment
                                             </h4>
@@ -335,7 +332,7 @@ const SpeciesDetail = () => {
 
                                 <div className="text-white/60 text-sm leading-relaxed border-t border-white/5 pt-6">
                                     <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary">policy</span>
+                                        <span className="material-symbols-outlined text-primary-green">policy</span>
                                         Assessment Details
                                     </h4>
                                     {statusKey === "NE" ? (
@@ -357,9 +354,9 @@ const SpeciesDetail = () => {
                     <div className="space-y-6">
 
                         {/* Location Context */}
-                        <div className="glass-panel p-6 bg-white/[0.02] border-white/10">
-                            <h4 className="text-[10px] font-bold text-primary uppercase mb-4 tracking-[0.2em] flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        <div className="glass-panel p-6 bg-white/2 border-white/10">
+                            <h4 className="text-[10px] font-bold text-primary-green uppercase mb-4 tracking-[0.2em] flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary-green animate-pulse"></span>
                                 Coordinates
                             </h4>
                             <div className="h-48 bg-black rounded-xl overflow-hidden mb-4 border border-white/10 relative grayscale hover:grayscale-0 transition-all duration-500">
@@ -400,7 +397,7 @@ const SpeciesDetail = () => {
 
                                 <div>
                                     <p className="text-[9px] text-white/30 uppercase mb-1">Observed By</p>
-                                    <p className="text-xs font-bold text-primary">
+                                    <p className="text-xs font-bold text-primary-green">
                                         {sighting.recordedBy || "Anonymous Sentinel"}
                                     </p>
                                 </div>
@@ -419,7 +416,8 @@ const SpeciesDetail = () => {
                 </div>
             </div>
 
-            <Navbar species={sighting.scientificName || sighting.species} />
+            {/* Pass the full context object to the Navbar so the Chat Interface can use it */}
+            <Navbar species={speciesContextObj} />
         </div>
     );
 };

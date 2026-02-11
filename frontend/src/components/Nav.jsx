@@ -44,8 +44,8 @@ const Nav = ({ species }) => {
     <div className="pointer-events-none fixed inset-0 z-[100] flex flex-col justify-end pb-8">
       <nav className="pointer-events-auto relative mx-auto w-[90%] max-w-sm">
 
-        {isSpeciesPage && (
-          <>
+        {/* {isSpeciesPage && (
+          <> */}
             {/* --- 1. Chat Interface (Visible only when open) --- */}
             <div className={`absolute bottom-full left-0 w-full mb-4 transition-all duration-300 origin-bottom ${isChatOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}>
               {isChatOpen && (
@@ -72,8 +72,8 @@ const Nav = ({ species }) => {
                 </button>
               </div>
             )}
-          </>
-        )}
+          {/* </>
+        )} */}
 
         {/* --- 3. Main Navigation Bar --- */}
         <div className="glass-panel flex items-center justify-between rounded-3xl border border-white/10 bg-black/40 px-6 py-3 shadow-2xl backdrop-blur-xl">

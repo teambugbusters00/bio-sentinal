@@ -5,7 +5,8 @@
 Nearest animal hospital
 Finading natural habitat for a species
 
-What you need to set
-
-In Render (Node service env vars), add ML_API_URL with your Python service URL, e.g. https://biosentinal-ml-api.onrender.com.
-If you run locally, set ML_API_URL=http://localhost:8000.
+Gangetic plains Uttarakhand (start) to WB Sundarbans (end)
+Optional #Varanasi
+Optionsal #Western Ghats
+GIS Mapping of gangetic plains
+Report - Vulrenibility, endangerd, critical endanged (yellow=vulrenibility, orange=endangered-50%-70%, red=critical endangered-90%-100%)

@@ -16,6 +16,7 @@
     "@capacitor/geolocation": "^8.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.5",
+    "groq-sdk": "^0.37.0",
     "leaflet": "^1.9.4",
     "material-symbols": "^0.40.2",
     "react": "^19.1.0",
