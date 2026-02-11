@@ -18,11 +18,13 @@ const NavItem = ({ to, icon, label }) => (
   </NavLink>
 );
 
-const Nav = ({species}) => {
+const Nav = ({ species }) => {
   const { logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(true);
+
+  const isSpeciesPage = location.pathname.startsWith('/species/');
 
   // Auto-close chat if user navigates away
   useEffect(() => {
@@ -42,31 +44,35 @@ const Nav = ({species}) => {
     <div className="pointer-events-none fixed inset-0 z-[100] flex flex-col justify-end pb-8">
       <nav className="pointer-events-auto relative mx-auto w-[90%] max-w-sm">
 
-        {/* --- 1. Chat Interface (Visible only when open) --- */}
-        <div className={`absolute bottom-full left-0 w-full mb-4 transition-all duration-300 origin-bottom ${isChatOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}>
-          {isChatOpen && (
-            <div className="relative">
-              <ChatInterface onClose={handleCloseChat} species={species}/>
+        {isSpeciesPage && (
+          <>
+            {/* --- 1. Chat Interface (Visible only when open) --- */}
+            <div className={`absolute bottom-full left-0 w-full mb-4 transition-all duration-300 origin-bottom ${isChatOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}>
+              {isChatOpen && (
+                <div className="relative">
+                  <ChatInterface onClose={handleCloseChat} species={species} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* --- 2. Ask Kaya Button (Visible on all pages) --- */}
-        {!isChatOpen && (
-          <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-20 animate-in fade-in slide-in-from-bottom-2">
-            <button
-              onClick={() => setIsChatOpen(true)}
-              className="flex bg-dark-start h-14 w-28 items-center justify-center gap-2 rounded-full border border-primary-green/60 bg-bg-dark shadow-[0_0_30px_rgba(34,255,136,0.4)] transition-all duration-300 hover:scale-105 active:scale-95 hover:cursor-pointer group"
-            >
-              <span className="material-symbols-outlined text-2xl text-primary-green group-hover:animate-pulse">
-                nest_eco_leaf
-              </span>
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[8px] text-white/60 font-medium uppercase">Ask</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white">Kaya</span>
+            {/* --- 2. Ask Kaya Button (Visible on all pages) --- */}
+            {!isChatOpen && (
+              <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-20 animate-in fade-in slide-in-from-bottom-2">
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="flex bg-dark-start h-14 w-28 items-center justify-center gap-2 rounded-full border border-primary-green/60 bg-bg-dark shadow-[0_0_30px_rgba(34,255,136,0.4)] transition-all duration-300 hover:scale-105 active:scale-95 hover:cursor-pointer group"
+                >
+                  <span className="material-symbols-outlined text-2xl text-primary-green group-hover:animate-pulse">
+                    nest_eco_leaf
+                  </span>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-[8px] text-white/60 font-medium uppercase">Ask</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white">Kaya</span>
+                  </div>
+                </button>
               </div>
-            </button>
-          </div>
+            )}
+          </>
         )}
 
         {/* --- 3. Main Navigation Bar --- */}
