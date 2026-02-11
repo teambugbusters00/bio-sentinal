@@ -5,7 +5,7 @@ import Nav from '../components/Nav';
 
 // API URL - Use main API URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const SATELLITE_API_URL = import.meta.env.VITE_SATELLITE_API_URL || 'http://localhost:8000';
+const SATELLITE_API_URL = import.meta.env.GBIF_API_URL || 'http://localhost:8000';
 
 // Preset regions
 const PRESET_REGIONS = {
@@ -41,7 +41,7 @@ const Satellite = () => {
                 .filter(([_, enabled]) => enabled)
                 .map(([layer]) => layer);
 
-            const response = await fetch(`${SATELLITE_API_URL}/satellite/analyze`, {
+            const response = await fetch(`${GBIF_API_URL}/satellite/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
