@@ -48,7 +48,6 @@ const RecenterMap = ({ lat, lon, zoom = 8 }) => {
 const MapClickHandler = ({ onStretchSelect }) => {
     useMapEvents({
         click: (e) => {
-            // Find nearest stretch
             const { lat, lng } = e.latlng;
             let nearest = null;
             let minDist = Infinity;
@@ -72,7 +71,6 @@ const MapClickHandler = ({ onStretchSelect }) => {
 const GangaRiparian = () => {
     const [selectedStretch, setSelectedStretch] = useState(null);
     const [location, setLocation] = useState({ lat: 25.435, lon: 81.846 });
-    const [address, setAddress] = useState('Ganga Basin, India');
     const [uploadedImage, setUploadedImage] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
@@ -87,29 +85,11 @@ const GangaRiparian = () => {
         getUserLocation()
             .then(coords => {
                 setLocation({ lat: coords.latitude, lon: coords.longitude });
-                fetchAddress(coords.latitude, coords.longitude);
             })
-            .catch(err => {
-                console.log('Using default Ganga location');
+            .catch(() => {
+                // Silent fail, use default location
             });
     }, []);
-
-    const fetchAddress = async (lat, lon) => {
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
-                { headers: { 'User-Agent': 'BioSentinel-App/1.0' } }
-            );
-            const data = await response.json();
-            if (data.address) {
-                const city = data.address.city || data.address.town || data.address.village;
-                const state = data.address.state;
-                setAddress(`${city ? city + ', ' : ''}${state || ''}`);
-            }
-        } catch {
-            setAddress(`${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`);
-        }
-    };
 
     const handleStretchSelect = (stretch) => {
         setSelectedStretch(stretch);
@@ -122,10 +102,7 @@ const GangaRiparian = () => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('image/')) {
             const imageUrl = URL.createObjectURL(file);
-            setUploadedImage({
-                file,
-                preview: imageUrl
-            });
+            setUploadedImage({ file, preview: imageUrl });
             setShowCamera(false);
         }
     };
@@ -180,31 +157,11 @@ const GangaRiparian = () => {
             }
         } catch (error) {
             console.error('Analysis error:', error);
-            // Mock result
+            // Mock result on error
             setAnalysisResult({
                 success: true,
-                waterAnalysis: {
-                    waterStatus: 'Average',
-                    statusEmoji: '🟡',
-                    waterQualityScore: 65,
-                    imageAnalysis: {
-                        turbidityIndicator: 45,
-                        foamAlgaeIndicator: 30
-                    }
-                },
-                speciesAnalysis: {
-                    waterStatus: 'Average',
-                    estimatedRichness: 60,
-                    likelySpecies: [
-                        { name: 'Rohu', scientificName: 'Labeo rohita', status: 'Least Concern' },
-                        { name: 'Katla', scientificName: 'Catla catla', status: 'Least Concern' },
-                        { name: 'Chironomus Larvae', scientificName: 'Chironomus spp.', status: 'Tolerant' }
-                    ],
-                    unlikelySpecies: [
-                        { name: 'Gangetic Dolphin', scientificName: 'Platanista gangetica', status: 'Endangered' },
-                        { name: 'Gharial', scientificName: 'Gavialis gangeticus', status: 'Critically Endangered' }
-                    ]
-                }
+                waterAnalysis: { waterStatus: 'Average', statusEmoji: '🟡', waterQualityScore: 65, imageAnalysis: { turbidityIndicator: 45, foamAlgaeIndicator: 30 } },
+                speciesAnalysis: { waterStatus: 'Average', estimatedRichness: 60, likelySpecies: [{ name: 'Rohu', scientificName: 'Labeo rohita' }, { name: 'Katla', scientificName: 'Catla catla' }], unlikelySpecies: [{ name: 'Gangetic Dolphin' }] }
             });
         } finally {
             setAnalyzing(false);
@@ -228,18 +185,18 @@ const GangaRiparian = () => {
 
     return (
         <div className="text-white/90 font-sans min-h-screen bg-bg-gradient-start">
-            <div className="max-w-md mx-auto min-h-screen relative z-10 pb-32">
+            <div className="max-w-md mx-auto min-h-screen relative z-10 pb-32 sm:max-w-2xl md:max-w-4xl">
                 {/* Header */}
-                <div className="flex items-center p-6 justify-between">
+                <div className="flex items-center p-4 sm:p-6 justify-between">
                     <div className="flex-1 flex flex-col items-center">
-                        <h2 className="frosted-text text-lg font-bold tracking-tight">Bio Sentinel</h2>
-                        <span className="text-[9px] uppercase tracking-[0.2em] text-neon-green font-bold">Ganga Riparian</span>
+                        <h2 className="frosted-text text-base sm:text-lg font-bold tracking-tight">Bio Sentinel</h2>
+                        <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-neon-green font-bold">Ganga Riparian</span>
                     </div>
                 </div>
 
                 {/* Progress Steps */}
-                <div className="px-5 mb-4">
-                    <div className="flex items-center justify-between">
+                <div className="px-4 sm:px-6 mb-4">
+                    <div className="flex items-center justify-between max-w-xs mx-auto">
                         {[1, 2, 3].map(s => (
                             <div key={s} className={`flex items-center ${s < 3 ? 'flex-1' : ''}`}>
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -253,7 +210,7 @@ const GangaRiparian = () => {
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-between mt-2 text-[10px] text-white/50 px-1">
+                    <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-white/50 px-2 max-w-xs mx-auto">
                         <span>Select Stretch</span>
                         <span>Upload Photo</span>
                         <span>Results</span>
@@ -261,8 +218,8 @@ const GangaRiparian = () => {
                 </div>
 
                 {/* Map Section */}
-                <div className="px-5 mb-4">
-                    <div className="relative w-full h-64 rounded-3xl overflow-hidden border border-white/10">
+                <div className="px-4 sm:px-6 mb-4">
+                    <div className="relative w-full h-56 sm:h-72 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
                         <MapContainer
                             center={[25.435, 81.846]}
                             zoom={7}
@@ -276,19 +233,15 @@ const GangaRiparian = () => {
                             <RecenterMap lat={location.lat} lon={location.lon} zoom={selectedStretch ? 8 : 7} />
                             <MapClickHandler onStretchSelect={handleStretchSelect} />
 
-                            {/* Stretch markers */}
                             {GANGA_STRETCHES.map(stretch => (
                                 <Marker
                                     key={stretch.id}
                                     position={[stretch.lat, stretch.lon]}
                                     icon={createStretchIcon(stretch.color)}
-                                    eventHandlers={{
-                                        click: () => handleStretchSelect(stretch),
-                                    }}
+                                    eventHandlers={{ click: () => handleStretchSelect(stretch) }}
                                 />
                             ))}
 
-                            {/* User location */}
                             {location.lat !== 25.435 && (
                                 <Marker position={[location.lat, location.lon]} />
                             )}
@@ -299,12 +252,12 @@ const GangaRiparian = () => {
                             <div className="absolute bottom-3 left-3 right-3 glass-panel px-4 py-3 bg-black/80 border-white/20 rounded-xl backdrop-blur-md z-[400]">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-bold text-white">{selectedStretch.name}</p>
-                                        <p className="text-xs text-white/60">{selectedStretch.state || 'Ganga Basin'}</p>
+                                        <p className="text-sm sm:text-base font-bold text-white">{selectedStretch.name}</p>
+                                        <p className="text-xs text-white/60">Ganga Basin</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ background: selectedStretch.color }}></div>
-                                        <span className="text-xs font-bold">{selectedStretch.pollution}</span>
+                                        <span className="text-xs sm:text-sm font-bold">{selectedStretch.pollution}</span>
                                     </div>
                                 </div>
                             </div>
@@ -314,24 +267,23 @@ const GangaRiparian = () => {
 
                 {/* Step 1: Select Stretch */}
                 {step === 1 && (
-                    <div className="px-5">
-                        <p className="text-xs text-white/60 text-center mb-4">
+                    <div className="px-4 sm:px-6">
+                        <p className="text-xs sm:text-sm text-white/60 text-center mb-4">
                             Tap a Ganga stretch on the map to begin analysis
                         </p>
 
-                        {/* Stretch Cards */}
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {GANGA_STRETCHES.map(stretch => (
                                 <button
                                     key={stretch.id}
                                     onClick={() => handleStretchSelect(stretch)}
-                                    className="w-full glass-panel p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors border border-white/10"
+                                    className="w-full glass-panel p-3 sm:p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors border border-white/10"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 rounded-full" style={{ background: stretch.color }}></div>
-                                        <span className="text-sm font-medium">{stretch.name}</span>
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: stretch.color }}></div>
+                                        <span className="text-xs sm:text-sm font-medium truncate">{stretch.name}</span>
                                     </div>
-                                    <span className="text-xs text-white/40">{stretch.status}</span>
+                                    <span className="text-[10px] sm:text-xs text-white/40 whitespace-nowrap">{stretch.status}</span>
                                 </button>
                             ))}
                         </div>
@@ -340,7 +292,7 @@ const GangaRiparian = () => {
 
                 {/* Step 2: Upload Photo */}
                 {step === 2 && (
-                    <div className="px-5 space-y-4">
+                    <div className="px-4 sm:px-6 space-y-4">
                         <div className="glass-panel p-4 rounded-2xl border-l-4 border-neon-green">
                             <p className="text-xs text-white/60 mb-1">Selected Stretch</p>
                             <p className="text-sm font-bold text-neon-green">{selectedStretch?.name}</p>
@@ -350,22 +302,24 @@ const GangaRiparian = () => {
                         </div>
 
                         {/* Upload Area */}
-                        <div
-                            onClick={() => setShowCamera(true)}
-                            className="glass-panel border-dashed border-white/20 p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-colors cursor-pointer rounded-3xl"
-                        >
-                            <div className="w-14 h-14 bg-neon-green/10 rounded-full flex items-center justify-center mb-4">
-                                <span className="material-symbols-outlined text-neon-green text-3xl">add_a_photo</span>
+                        {!uploadedImage && (
+                            <div
+                                onClick={() => setShowCamera(true)}
+                                className="glass-panel border-dashed border-white/20 p-6 sm:p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-colors cursor-pointer rounded-2xl sm:rounded-3xl"
+                            >
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-neon-green/10 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                                    <span className="material-symbols-outlined text-neon-green text-2xl sm:text-3xl">add_a_photo</span>
+                                </div>
+                                <p className="frosted-text font-bold text-sm sm:text-base">Upload Water Photo</p>
+                                <p className="text-white/30 text-[10px] sm:text-xs mt-1">For water quality analysis</p>
                             </div>
-                            <p className="frosted-text font-bold text-sm">Upload Water Photo</p>
-                            <p className="text-white/30 text-[10px] mt-1">For water quality analysis</p>
-                        </div>
+                        )}
 
                         {/* Image Preview */}
                         {uploadedImage && (
                             <div className="glass-panel p-4 rounded-2xl">
                                 <p className="text-xs text-white/60 mb-2">Selected Photo</p>
-                                <div className="relative w-full h-48 rounded-xl overflow-hidden mb-3">
+                                <div className="relative w-full h-40 sm:h-48 rounded-xl overflow-hidden mb-3">
                                     <img
                                         src={uploadedImage.preview}
                                         alt="Water sample"
@@ -381,7 +335,7 @@ const GangaRiparian = () => {
                                 <button
                                     onClick={analyzeWater}
                                     disabled={analyzing}
-                                    className="w-full glass-panel bg-neon-green hover:bg-neon-green/90 text-black font-black h-14 flex items-center justify-center neon-glow transition-all active:scale-95 uppercase tracking-widest text-sm rounded-2xl"
+                                    className="w-full glass-panel bg-neon-green hover:bg-neon-green/90 text-black font-black h-12 sm:h-14 flex items-center justify-center neon-glow transition-all active:scale-95 uppercase tracking-widest text-xs sm:text-sm rounded-xl sm:rounded-2xl"
                                 >
                                     {analyzing ? (
                                         <>
@@ -398,31 +352,18 @@ const GangaRiparian = () => {
                         {/* Camera/File Options */}
                         {showCamera && (
                             <div className="glass-panel p-4 rounded-2xl space-y-2">
-                                <input
-                                    type="file"
-                                    ref={cameraInputRef}
-                                    onChange={handleFileChange}
-                                    accept="image/*"
-                                    capture="environment"
-                                    className="hidden"
-                                />
+                                <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
                                 <button
                                     onClick={() => cameraInputRef.current?.click()}
-                                    className="w-full py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
                                 >
                                     <span className="material-symbols-outlined">photo_camera</span>
                                     Take Photo
                                 </button>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    accept="image/*"
-                                    className="hidden"
-                                />
+                                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
                                 >
                                     <span className="material-symbols-outlined">folder</span>
                                     Choose from Gallery
@@ -430,10 +371,7 @@ const GangaRiparian = () => {
                             </div>
                         )}
 
-                        <button
-                            onClick={() => setStep(1)}
-                            className="w-full py-3 text-xs text-white/50 hover:text-white transition-colors"
-                        >
+                        <button onClick={() => setStep(1)} className="w-full py-3 text-xs sm:text-sm text-white/50 hover:text-white transition-colors">
                             ← Back to Stretch Selection
                         </button>
                     </div>
@@ -441,19 +379,16 @@ const GangaRiparian = () => {
 
                 {/* Step 3: Results */}
                 {step === 3 && analysisResult && (
-                    <div className="px-5 space-y-4">
+                    <div className="px-4 sm:px-6 space-y-4">
                         {/* Water Status */}
                         <div className={`glass-panel p-4 rounded-2xl border ${getStatusColor(analysisResult.waterAnalysis?.waterStatus)}`}>
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs font-bold uppercase tracking-wider">Water Status</span>
-                                <span className="text-2xl">{analysisResult.waterAnalysis?.statusEmoji}</span>
+                                <span className="text-2xl sm:text-3xl">{analysisResult.waterAnalysis?.statusEmoji}</span>
                             </div>
-                            <p className="text-2xl font-bold mb-2">{analysisResult.waterAnalysis?.waterStatus}</p>
+                            <p className="text-xl sm:text-2xl font-bold mb-2">{analysisResult.waterAnalysis?.waterStatus}</p>
                             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-neon-green transition-all duration-500"
-                                    style={{ width: `${analysisResult.waterAnalysis?.waterQualityScore || 0}%` }}
-                                ></div>
+                                <div className="h-full bg-neon-green transition-all duration-500" style={{ width: `${analysisResult.waterAnalysis?.waterQualityScore || 0}%` }}></div>
                             </div>
                             <p className="text-xs mt-1 text-white/60">Quality Score: {analysisResult.waterAnalysis?.waterQualityScore}/100</p>
                         </div>
@@ -463,73 +398,46 @@ const GangaRiparian = () => {
                             <span className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3 block">Estimated Species Richness</span>
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="flex-1">
-                                    <p className="text-3xl font-bold text-neon-green">{analysisResult.speciesAnalysis?.estimatedRichness || 0}%</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-neon-green">{analysisResult.speciesAnalysis?.estimatedRichness || 0}%</p>
                                     <p className="text-xs text-white/50">of baseline species</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-medium">{analysisResult.speciesAnalysis?.waterStatus} Water</p>
+                                    <p className="text-sm sm:text-base font-medium">{analysisResult.speciesAnalysis?.waterStatus} Water</p>
                                     <p className="text-xs text-white/40">Ecosystem Condition</p>
                                 </div>
                             </div>
 
-                            {/* Likely Species */}
                             <div className="space-y-2">
                                 <p className="text-xs font-bold text-green-400 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                    Likely Species Present
+                                    Likely Species
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                     {(analysisResult.speciesAnalysis?.likelySpecies || []).slice(0, 4).map((species, idx) => (
-                                        <span key={idx} className="px-2 py-1 bg-green-500/20 rounded-full text-xs">
-                                            {species.name}
-                                        </span>
+                                        <span key={idx} className="px-2 py-1 bg-green-500/20 rounded-full text-xs">{species.name}</span>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Unlikely Species */}
                             <div className="space-y-2 mt-3">
                                 <p className="text-xs font-bold text-red-400 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">cancel</span>
-                                    Unlikely (Sensitive Species)
+                                    Unlikely (Sensitive)
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                     {(analysisResult.speciesAnalysis?.unlikelySpecies || []).slice(0, 4).map((species, idx) => (
-                                        <span key={idx} className="px-2 py-1 bg-red-500/20 rounded-full text-xs">
-                                            {species.name}
-                                        </span>
+                                        <span key={idx} className="px-2 py-1 bg-red-500/20 rounded-full text-xs">{species.name}</span>
                                     ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Analysis Details */}
-                        <div className="glass-panel p-4 rounded-2xl space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-wider text-white/60">Analysis Details</p>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-white/5 rounded-xl p-3">
-                                    <p className="text-[10px] text-white/40 mb-1">Turbidity Indicator</p>
-                                    <p className="text-sm font-bold">{analysisResult.waterAnalysis?.imageAnalysis?.turbidityIndicator || 0}%</p>
-                                </div>
-                                <div className="bg-white/5 rounded-xl p-3">
-                                    <p className="text-[10px] text-white/40 mb-1">Foam/Algae</p>
-                                    <p className="text-sm font-bold">{analysisResult.waterAnalysis?.imageAnalysis?.foamAlgaeIndicator || 0}%</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Action Buttons */}
                         <div className="flex gap-2">
-                            <button
-                                onClick={resetAnalysis}
-                                className="flex-1 py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors"
-                            >
+                            <button onClick={resetAnalysis} className="flex-1 py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors text-xs sm:text-sm">
                                 New Analysis
                             </button>
-                            <button
-                                onClick={() => setStep(2)}
-                                className="flex-1 py-3 glass-panel bg-neon-green text-black font-bold rounded-xl hover:bg-neon-green/90 transition-colors"
-                            >
+                            <button onClick={() => setStep(2)} className="flex-1 py-3 glass-panel bg-neon-green text-black font-bold rounded-xl hover:bg-neon-green/90 transition-colors text-xs sm:text-sm">
                                 Upload Another
                             </button>
                         </div>
