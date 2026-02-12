@@ -80,7 +80,7 @@ const Nav = ({ species }) => {
 
           <NavItem to="/" icon="home" label="Home" />
           <NavItem to="/map" icon="map" label="Map" />
-          <NavItem to="/alert" icon="notifications" label="Alerts" />
+          <NavItem to="/alerts" icon="notifications" label="Alerts" />
 
           {/* Floating Report Button */}
           <div className="relative mx-2">

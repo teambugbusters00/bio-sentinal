@@ -524,7 +524,7 @@ const Alerts = () => {
                     </div>
 
                     {/* Tab Navigation */}
-                    <div className="flex gap-1 mb-4 overflow-x-auto">
+                    <div className="flex gap-1 mb-4 overflow-x-auto tab-scrollbar">
                         {[
                             { key: 'alerts', label: 'Alerts', icon: 'notifications', count: alerts.length },
                             { key: 'danger', label: 'Danger Zones', icon: 'warning', count: dangerZones.length },

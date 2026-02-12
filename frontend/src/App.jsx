@@ -1,11 +1,14 @@
+import React, { useEffect } from 'react';
 import './App.css';
+import { App as CapApp } from '@capacitor/app';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+
+// Page Imports
 import Landing from './pages/Landing';
 import Map from './pages/Map';
 import SpeciesDetail from './pages/SpeciesDetail';
 import Dashboard from './pages/Dashboard';
-import Alert from './pages/Alert';
 import Alerts from './pages/Alerts';
 import Report from './pages/Report';
 import Team from './pages/Team';
@@ -39,65 +42,42 @@ const ProtectedRoute = ({ children, requireAuth = true }) => {
     return children;
 };
 
-// Role-based Dashboard Route
+// Role-based Dashboard Route logic
 const DashboardRoute = () => {
     const { user, profileComplete } = useAuth();
 
-    // If not logged in, redirect to login
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
+    if (!user) return <Navigate to="/login" replace />;
+    if (!profileComplete) return <Navigate to="/profile-setup" replace />;
 
-    // If profile is incomplete, redirect to profile setup
-    if (!profileComplete) {
-        return <Navigate to="/profile-setup" replace />;
-    }
-
-    // Redirect to role-specific dashboard
     const role = user.role;
-    if (role === 'student') {
-        return <StudentDashboard />;
-    } else if (role === 'researcher') {
-        return <ResearcherDashboard />;
-    } else if (role === 'community') {
-        return <CommunityDashboard />;
-    }
-    
+    if (role === 'student') return <StudentDashboard />;
+    if (role === 'researcher') return <ResearcherDashboard />;
+    if (role === 'community') return <CommunityDashboard />;
+
     return <Dashboard />;
 };
 
-// Role-specific dashboard pages
+// Role-specific dashboard page wrappers
 const StudentDashboardPage = () => (
-    <ProtectedRoute>
-        <StudentDashboard />
-    </ProtectedRoute>
+    <ProtectedRoute><StudentDashboard /></ProtectedRoute>
 );
-
 const ResearcherDashboardPage = () => (
-    <ProtectedRoute>
-        <ResearcherDashboard />
-    </ProtectedRoute>
+    <ProtectedRoute><ResearcherDashboard /></ProtectedRoute>
 );
-
 const CommunityDashboardPage = () => (
-    <ProtectedRoute>
-        <CommunityDashboard />
-    </ProtectedRoute>
+    <ProtectedRoute><CommunityDashboard /></ProtectedRoute>
 );
 
 // Profile setup page (requires auth, redirects if complete)
 const ProfileSetupPage = () => {
     const { user, profileComplete } = useAuth();
-    
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
-    
+
+    if (!user) return <Navigate to="/login" replace />;
     if (profileComplete) {
         const dashboardPath = user.role ? `/dashboard/${user.role}` : '/dashboard';
         return <Navigate to={dashboardPath} replace />;
     }
-    
+
     return (
         <ProtectedRoute>
             <ProfileSetup />
@@ -106,36 +86,60 @@ const ProfileSetupPage = () => {
 };
 
 function App() {
+    useEffect(() => {
+        // Set up the Capacitor Back Button listener
+        const setupListener = async () => {
+            const backHandler = await CapApp.addListener('backButton', (data) => {
+                if (data.canGoBack) {
+                    window.history.back();
+                } else {
+                    // No history left? Close the app.
+                    CapApp.exitApp();
+                }
+            });
+
+            return backHandler;
+        };
+
+        const handlerPromise = setupListener();
+
+        // Cleanup: remove listener on unmount to prevent memory leaks
+        return () => {
+            handlerPromise.then(h => h.remove());
+        };
+    }, []);
+
     return (
-        <AuthProvider>
-            <Router>
-                <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/map" element={<Map />} />
-                    <Route path="/species/:id" element={<SpeciesDetail />} />
-                    <Route path="/alert" element={<Alert />} />
-                    <Route path="/alerts" element={<Alerts />} />
-                    <Route path="/report" element={<Report />} />
-                    <Route path="/satellite" element={<Satellite />} />
-                    <Route path="/riparian" element={<GangaRiparian />} />
-                    <Route path="/team" element={<Team />} />
+        <div className="App">
+            <AuthProvider>
+                <Router>
+                    <Routes>
+                        {/* Public Routes */}
+                        <Route path="/" element={<Landing />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/map" element={<Map />} />
+                        <Route path="/species/:id" element={<SpeciesDetail />} />
+                        <Route path="/alerts" element={<Alerts />} />
+                        <Route path="/report" element={<Report />} />
+                        <Route path="/satellite" element={<Satellite />} />
+                        <Route path="/riparian" element={<GangaRiparian />} />
+                        <Route path="/team" element={<Team />} />
 
-                    {/* Auth Routes */}
-                    <Route path="/profile-setup" element={<ProfileSetupPage />} />
+                        {/* Auth Routes */}
+                        <Route path="/profile-setup" element={<ProfileSetupPage />} />
 
-                    {/* Dashboard Routes */}
-                    <Route path="/dashboard" element={<DashboardRoute />} />
-                    <Route path="/dashboard/student" element={<StudentDashboardPage />} />
-                    <Route path="/dashboard/researcher" element={<ResearcherDashboardPage />} />
-                    <Route path="/dashboard/community" element={<CommunityDashboardPage />} />
+                        {/* Dashboard Routes */}
+                        <Route path="/dashboard" element={<DashboardRoute />} />
+                        <Route path="/dashboard/student" element={<StudentDashboardPage />} />
+                        <Route path="/dashboard/researcher" element={<ResearcherDashboardPage />} />
+                        <Route path="/dashboard/community" element={<CommunityDashboardPage />} />
 
-                    {/* Catch all - redirect to home */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </Router>
-        </AuthProvider>
+                        {/* Catch all - redirect to home */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        </div>
     );
 }
 
