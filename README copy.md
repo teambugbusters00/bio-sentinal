@@ -1,12 +1,16 @@
-# <img src="https://biosentinal.vercel.app/BioSentinal.png" alt="BioSentinel Logo" width="40" height="40" /> Bio Sentinal
+# BioSentinel
 
 Real-time biodiversity protection platform using AI, satellite insights, and community action.
+
+[LOGO PLACEHOLDER -- add image here]
+
+[APP DOWNLOAD QR PLACEHOLDER -- scanning starts APK download]
 
 ---
 
 ## Overview
 
-Bio Sentinal is a biodiversity monitoring platform that combines AI, satellite intelligence, and community reports to protect ecosystems. It provides real-time alerts, species insights, and collaborative dashboards for students, researchers, and conservation teams.
+BioSentinel is a biodiversity monitoring platform that combines AI, satellite intelligence, and community reports to protect ecosystems. It provides real-time alerts, species insights, and collaborative dashboards for students, researchers, and conservation teams.
 
 ---
 
@@ -130,6 +134,15 @@ Base URL: http://localhost:7860
 
 ---
 
+## Team
+
+- Vijay Jangid -- Project Lead and Lead Developer
+- Preeti Yadav -- Researcher and Manager
+- Aayush Laddha -- Full Stack Developer
+- Raghav Raj -- UX Researcher and Project Manager
+
+---
+
 ## Suggestions to Add Later
 
 - Architecture diagram (high-level system flow)
@@ -147,23 +160,10 @@ Base URL: http://localhost:7860
 ### Backend (.env)
 ```env
 GEMINI_API_KEY=your_key_here
-MONGODB_URI=mongodb://localhost:27017/Bio Sentinal
+MONGODB_URI=mongodb://localhost:27017/biosentinel
 JWT_SECRET=your_secret_here
 NASA_FIRMS_API_KEY=your_key_here
 PORT=3000
-```
-
-### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:3000/api
-VITE_GBIF_API_URL=http://localhost:3000/api
-VITE_AI_ANALYSIS_URL=http://localhost:3000/api
-
-VITE_MAP_CENTER_LAT=25.5
-VITE_MAP_CENTER_LON=83.0
-VITE_MAP_DEFAULT_ZOOM=7
-
-VITE_APP_NAME=BioSentinal
 ```
 
 ---
@@ -203,28 +203,29 @@ VITE_APP_NAME=BioSentinal
 
 ## 🌐 Deployment
 
+### Heroku
+```bash
+echo "web: node app.js" > ai/Procfile
+heroku create biosentinel-api
+heroku config:set GEMINI_API_KEY=your_key
+git push heroku master
+```
+
 ### Vercel (Frontend)
 ```bash
 cd frontend
 vercel
 ```
 
-### Render (Express API)
-```bash
-# Create a new Web Service on Render
-# Root: ai
-# Build Command: npm install
-# Start Command: node app.js
-```
+---
 
-### Render (Python / GBIF ML API or HF FastAPI)
-```bash
-# Create a new Web Service on Render
-# Root: ai (for gbif_ml_api.py) or project root (for app.py)
-# Build Command: pip install -r requirements.txt
-# Start Command (GBIF ML API): python gbif_ml_api.py 8000
-# Start Command (HF FastAPI): python app.py
-```
+## 🤝 Contributing
+
+1. Fork repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add feature'`
+4. Push: `git push origin feature/amazing-feature`
+5. Open Pull Request
 
 ---
 
@@ -235,6 +236,12 @@ vercel
 | **DR. Vijay** | Lead Developer |
 | **Preeti Yadav** | Event Manager |
 | **Aayush Laddha** | Full Stack Developer |
+
+---
+
+## 📝 License
+
+MIT License - See LICENSE file
 
 ---
 
@@ -251,4 +258,4 @@ vercel
 **Version:** 1.0.0  
 **Status:** Active Development
 
-🌍 **Help protect our planet! Join Bio Sentinal today.**
+🌍 **Help protect our planet! Join BioSentinel today.**
