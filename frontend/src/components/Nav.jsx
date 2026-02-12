@@ -101,7 +101,8 @@ const Nav = ({ species }) => {
             </NavLink>
           </div>
 
-          <NavItem to="/satellite" icon="river" label="Ganga" />
+          <NavItem to="/satellite" icon="satellite" label="Satellite" />
+          <NavItem to="/riparian" icon="eco" label="Riparian" />
           <NavItem to="/team" icon="groups" label="Team" />
           <NavItem to="/dashboard" icon="dashboard" label="Dash" />
 

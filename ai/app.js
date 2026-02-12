@@ -19,6 +19,7 @@ import aiRoutes from './src/routes/ai.routes.js';
 import alertRoutes from './src/routes/alert.routes.js';
 import authRoutes from './src/routes/auth.routes.js';
 import satelliteRoutes from './src/routes/satellite.routes.js';
+import riparianRoutes from './src/routes/riparian.routes.js';
 
 dotenv.config();
 
@@ -105,6 +106,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', aiRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/satellite', satelliteRoutes);
+app.use('/api/riparian', riparianRoutes);
 
 // --- UPDATED SPECIES ENDPOINT (Using Groq) ---
 app.post("/api/species", async (req, res) => {

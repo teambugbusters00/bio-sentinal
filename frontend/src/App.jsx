@@ -15,6 +15,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import ResearcherDashboard from './pages/ResearcherDashboard';
 import CommunityDashboard from './pages/CommunityDashboard';
 import Satellite from './pages/Satellite';
+import GangaRiparian from './pages/GangaRiparian';
 
 // Protected Route component
 const ProtectedRoute = ({ children, requireAuth = true }) => {
@@ -118,6 +119,7 @@ function App() {
                     <Route path="/alerts" element={<Alerts />} />
                     <Route path="/report" element={<Report />} />
                     <Route path="/satellite" element={<Satellite />} />
+                    <Route path="/riparian" element={<GangaRiparian />} />
                     <Route path="/team" element={<Team />} />
 
                     {/* Auth Routes */}
