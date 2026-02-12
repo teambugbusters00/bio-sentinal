@@ -23,9 +23,22 @@ Bio Sentinal is a biodiversity monitoring platform that combines AI, satellite i
 
 ## App Download
 
-Scan the QR code to download the APK.
+Scan the QR code to download the APK - Scanning starts APK Download
 
-[APP DOWNLOAD QR PLACEHOLDER -- scanning starts APK download]
+# <img src="https://biosentinal.vercel.app/ApkQR.png" alt="Apk QR" width="300" height="300" />
+
+---
+
+## User Manual (How to Use)
+
+1. Open the web app or install the APK using the QR code.
+2. Sign up or log in.
+3. Complete your profile and choose a role (Student, Researcher, Community).
+4. Explore the live map and biodiversity alerts.
+5. Search species, view detail pages, and check conservation guidance.
+6. Submit reports and contribute observations.
+7. Use the AI assistant for species-specific help.
+8. (Advanced) Run satellite or riparian analysis for deeper insights.
 
 ---
 
@@ -35,6 +48,63 @@ Scan the QR code to download the APK.
 - Node API: Main backend for auth, alerts, AI chat, satellite and riparian features
 - GBIF ML API: Optional FastAPI service for GBIF and ML-based analysis
 - HF FastAPI: Lightweight FastAPI service for image authenticity analysis
+
+---
+
+## 🌐 Running Locally
+
+### Starting
+```bash
+git clone https://github.com/eags-aayush/bio-sentinal.git
+cd bio-sentinal
+```
+
+### Vercel (Frontend)
+```bash
+cd frontend
+npm install
+npm run dev || npm run build
+```
+
+### Render (Express API)
+```bash
+cd ai
+npm install
+node app.js
+```
+
+### Render (Python / GBIF ML API or HF FastAPI)
+```bash
+cd ai
+pip install -r requirements.txt
+python gbif_ml_api.py 8000 || python app.py
+```
+
+---
+
+## 🔑 Environment Variables
+
+### Backend (.env)
+```env
+GEMINI_API_KEY=your_key_here
+MONGODB_URI=mongodb://localhost:27017/Bio-Sentinal
+JWT_SECRET=your_secret_here
+NASA_FIRMS_API_KEY=your_key_here
+PORT=3000
+```
+
+### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_GBIF_API_URL=http://localhost:3000/api
+VITE_AI_ANALYSIS_URL=http://localhost:3000/api
+
+VITE_MAP_CENTER_LAT=25.5
+VITE_MAP_CENTER_LON=83.0
+VITE_MAP_DEFAULT_ZOOM=7
+
+VITE_APP_NAME=BioSentinal
+```
 
 ---
 
@@ -117,57 +187,6 @@ Base URL: http://localhost:7860
 
 ---
 
-## User Manual (How to Use)
-
-1. Open the web app or install the APK using the QR code.
-2. Sign up or log in.
-3. Complete your profile and choose a role (Student, Researcher, Community).
-4. Explore the live map and biodiversity alerts.
-5. Search species, view detail pages, and check conservation guidance.
-6. Submit reports and contribute observations.
-7. Use the AI assistant for species-specific help.
-8. (Advanced) Run satellite or riparian analysis for deeper insights.
-
----
-
-## Suggestions to Add Later
-
-- Architecture diagram (high-level system flow)
-- Screenshots or demo GIFs
-- Data sources and model references
-- Roadmap and milestones
-- Security and privacy notes
-- Contribution guide
-- License
-
----
-
-## 🔑 Environment Variables
-
-### Backend (.env)
-```env
-GEMINI_API_KEY=your_key_here
-MONGODB_URI=mongodb://localhost:27017/Bio Sentinal
-JWT_SECRET=your_secret_here
-NASA_FIRMS_API_KEY=your_key_here
-PORT=3000
-```
-
-### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:3000/api
-VITE_GBIF_API_URL=http://localhost:3000/api
-VITE_AI_ANALYSIS_URL=http://localhost:3000/api
-
-VITE_MAP_CENTER_LAT=25.5
-VITE_MAP_CENTER_LON=83.0
-VITE_MAP_DEFAULT_ZOOM=7
-
-VITE_APP_NAME=BioSentinal
-```
-
----
-
 ## 📊 Project Status
 
 ### ✅ Completed (70%)
@@ -201,49 +220,24 @@ VITE_APP_NAME=BioSentinal
 
 ---
 
-## 🌐 Deployment
-
-### Vercel (Frontend)
-```bash
-cd frontend
-vercel
-```
-
-### Render (Express API)
-```bash
-# Create a new Web Service on Render
-# Root: ai
-# Build Command: npm install
-# Start Command: node app.js
-```
-
-### Render (Python / GBIF ML API or HF FastAPI)
-```bash
-# Create a new Web Service on Render
-# Root: ai (for gbif_ml_api.py) or project root (for app.py)
-# Build Command: pip install -r requirements.txt
-# Start Command (GBIF ML API): python gbif_ml_api.py 8000
-# Start Command (HF FastAPI): python app.py
-```
-
----
-
 ## 👥 Team
 
 | Name | Role |
 |------|------|
-| **DR. Vijay** | Lead Developer |
-| **Preeti Yadav** | Event Manager |
-| **Aayush Laddha** | Full Stack Developer |
+| **Vijay Ramdev** | ML & Model Developer |
+| **Preeti Yadav** | Event Manager & Researcher |
+| **Aayush Laddha** | Web & Backend Developer |
+| **Raghav Raj** | Researcher & Project Manager |
 
 ---
 
 ## 🔗 External Resources
 
+- [MOSDAC API](https://mosdac.gov.in/downloadapi-manual/)
 - [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/)
-- [Google Gemini API](https://ai.google.dev/)
-- [React Docs](https://react.dev/)
-- [MongoDB Docs](https://docs.mongodb.com/)
+- [GBIF Docs](https://techdocs.gbif.org/en/)
+- [Groq Docs](https://console.groq.com/docs/overview/)
+- [Fast API](https://fastapi.tiangolo.com/tutorial/)
 
 ---
 
