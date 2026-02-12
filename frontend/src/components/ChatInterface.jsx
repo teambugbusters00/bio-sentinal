@@ -118,7 +118,7 @@ const ChatInterface = ({ onClose, species = null }) => {
       }
 
       // 5. API Call
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/chat`, payload);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/chat`, payload);
 
       // --- CRITICAL FIX: Only lock initialization if request succeeded ---
       if (!hasInitializedBackEnd.current) {
