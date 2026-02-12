@@ -99,7 +99,7 @@ class GangaBufferService {
         }
     }
 
-    async fetchGBIFSpecies(bufferPolygon, limit = 300) {
+    async fetchGBIFSpecies(bufferPolygon, limit = 100) {
         try {
             // Get bounding box of buffer for GBIF query
             const bbox = turf.bbox(bufferPolygon);
@@ -108,23 +108,33 @@ class GangaBufferService {
             // GBIF occurrence search with bounding box
             const gbifUrl = 'https://api.gbif.org/v1/occurrence/search';
             
+            // Correct GBIF API params format
             const params = {
                 geometry: `POLYGON((${minLon} ${minLat}, ${maxLon} ${minLat}, ${maxLon} ${maxLat}, ${minLon} ${maxLat}, ${minLon} ${minLat}))`,
                 limit: limit,
                 hasCoordinate: true,
-                basisOfRecord: 'HUMAN_OBSERVATION,OBSERVATION,MACHINE_OBSERVATION'
+                basisOfRecord: 'HUMAN_OBSERVATION'
             };
 
             const response = await axios.get(gbifUrl, { params });
 
             if (response.data && response.data.results) {
-                return response.data.results;
+                // Transform GBIF data to our format
+                return response.data.results.map(record => ({
+                    scientificName: record.scientificName,
+                    commonName: record.vernacularName || record.scientificName,
+                    decimalLatitude: record.decimalLatitude,
+                    decimalLongitude: record.decimalLongitude,
+                    iucnStatus: record.iucnRedListCategory || 'UNKNOWN',
+                    individualCount: record.individualCount || 1,
+                    basisOfRecord: record.basisOfRecord,
+                    gbifID: record.gbifId
+                }));
             }
 
-            // Return mock data if API fails
             return this.getMockSpeciesData(bufferPolygon);
         } catch (error) {
-            console.error('GBIF API error:', error.message);
+            // Fall back to mock data on error
             return this.getMockSpeciesData(bufferPolygon);
         }
     }
@@ -304,16 +314,34 @@ class GangaBufferService {
     classifyRisk(iucnStatus) {
         const status = iucnStatus?.toUpperCase() || 'UNKNOWN';
         
+        // Map IUCN Red List codes to risk levels
+        // CR = Critically Endangered -> RED
+        // EN = Endangered -> BLUE
+        // VU = Vulnerable -> YELLOW
+        // NT = Near Threatened -> YELLOW
+        // LC = Least Concern -> GREEN
+        // DD = Data Deficient -> GREEN
+        // EX = Extinct -> RED
+        // EW = Extinct in Wild -> RED
+        
         switch (status) {
+            case 'CR':
             case 'CRITICALLY_ENDANGERED':
+            case 'EX':
+            case 'EW':
                 return 'RED';
+            case 'EN':
             case 'ENDANGERED':
                 return 'BLUE';
+            case 'VU':
             case 'VULNERABLE':
-                return 'YELLOW';
+            case 'NT':
             case 'NEAR_THREATENED':
                 return 'YELLOW';
+            case 'LC':
+            case 'DD':
             case 'LEAST_CONCERN':
+            case 'DATA_DEFICIENT':
                 return 'GREEN';
             default:
                 return 'GREEN';

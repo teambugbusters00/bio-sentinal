@@ -197,7 +197,7 @@ const GangaRiparian = () => {
             if (response.ok) {
                 const data = await response.json();
                 setSpeciesData(data);
-                setBufferData(data.buffer?.geojson ? { ...bufferData, buffer: data.buffer } : bufferData);
+                setBufferData(prev => data.buffer?.geojson ? { ...prev, buffer: data.buffer } : prev);
             }
         } catch {
             setSpeciesData(null);

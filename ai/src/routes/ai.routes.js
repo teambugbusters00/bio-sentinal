@@ -1,41 +1,42 @@
 import express from 'express';
+import multer from 'multer';
 import { askGemini, classifyImage, classifyImageFromURL, analyzeImage } from '../controllers/ai.controller.js';
 
 const router = express.Router();
 
-// File upload helper using multer from app.locals
-const getUploadMiddleware = (req) => req.app.locals?.upload;
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
+});
 
 // Chat endpoint
 router.post('/chat', askGemini);
 
 // Image classification endpoints with file upload
-router.post('/classify/image', async (req, res) => {
-    const upload = getUploadMiddleware(req);
-    if (!upload) {
-        return res.status(500).json({ error: 'Upload middleware not configured' });
+router.post('/classify/image', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No image file provided' });
     }
-    upload.single('file')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-        classifyImage(req, res);
-    });
+    classifyImage(req, res);
 });
 
 router.post('/classify/image/url', classifyImageFromURL);
 
-router.post('/classify/image/analyze', async (req, res) => {
-    const upload = getUploadMiddleware(req);
-    if (!upload) {
-        return res.status(500).json({ error: 'Upload middleware not configured' });
+router.post('/classify/image/analyze', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No image file provided' });
     }
-    upload.single('file')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-        analyzeImage(req, res);
-    });
+    analyzeImage(req, res);
 });
 
 export default router;
