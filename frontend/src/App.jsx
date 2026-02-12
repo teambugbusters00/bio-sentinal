@@ -6,6 +6,7 @@ import Map from './pages/Map';
 import SpeciesDetail from './pages/SpeciesDetail';
 import Dashboard from './pages/Dashboard';
 import Alert from './pages/Alert';
+import Alerts from './pages/Alerts';
 import Report from './pages/Report';
 import Team from './pages/Team';
 import Login from './pages/Login';
@@ -114,6 +115,7 @@ function App() {
                     <Route path="/map" element={<Map />} />
                     <Route path="/species/:id" element={<SpeciesDetail />} />
                     <Route path="/alert" element={<Alert />} />
+                    <Route path="/alerts" element={<Alerts />} />
                     <Route path="/report" element={<Report />} />
                     <Route path="/satellite" element={<Satellite />} />
                     <Route path="/team" element={<Team />} />

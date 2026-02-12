@@ -3,14 +3,12 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Nav from '../components/Nav';
-// Import the utility we created. ADJUST THIS PATH to where you saved the file.
 import { getUserLocation } from '../utils/location'; 
 
-// API URL - Use main API URL for auth, separate for GBIF
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const GBIF_API_URL = import.meta.env.VITE_GBIF_API_URL || 'http://localhost:8000';
+const AI_ANALYSIS_URL = import.meta.env.VITE_AI_ANALYSIS_URL || 'http://localhost:3000/api';
 
-// Fix for default Leaflet marker icons in React
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -18,7 +16,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom Neon Marker Icon
 const neonIcon = new L.DivIcon({
     className: 'custom-neon-marker',
     html: `<span class="material-symbols-outlined text-neon-green text-4xl drop-shadow-[0_0_10px_rgba(57,255,20,0.8)]" style="font-size: 40px;">location_on</span>`,
@@ -26,7 +23,6 @@ const neonIcon = new L.DivIcon({
     iconAnchor: [20, 40],
 });
 
-// Component to handle map center updates smoothly
 const RecenterMap = ({ lat, lon }) => {
     const map = useMap();
     useEffect(() => {
@@ -35,36 +31,44 @@ const RecenterMap = ({ lat, lon }) => {
     return null;
 };
 
-// --- Main Component ---
-
 const Report = () => {
-    // Form State
     const [obsType, setObsType] = useState('Species');
     const [speciesName, setSpeciesName] = useState('');
     const [expertVerify, setExpertVerify] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [riskResult, setRiskResult] = useState(null);
     
-    // Map/Location State
     const [location, setLocation] = useState({ lat: 0, lon: 0 });
     const [address, setAddress] = useState('Initializing Sensors...');
     const [gpsLoading, setGpsLoading] = useState(true);
     const [gpsError, setGpsError] = useState(null);
     const [scanStatus, setScanStatus] = useState('IDLE');
 
-    // File Upload State
     const [uploadedImages, setUploadedImages] = useState([]);
+    
+    const [showUploadConfirm, setShowUploadConfirm] = useState(false);
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState([]);
+    
+    const [selectedImage, setSelectedImage] = useState(null);
+    
+    const [scanningImage, setScanningImage] = useState(null);
+    const [scanProgress, setScanProgress] = useState(0);
+    
+    const [gbifSuggestions, setGbifSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [searchingGbif, setSearchingGbif] = useState(false);
+    const searchTimeoutRef = useRef(null);
+    
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
 
-    // Get User Coordinates (Async Wrapper)
     const getLocation = async () => {
         setGpsLoading(true);
         setGpsError(null);
         setAddress("Triangulating signal...");
 
         try {
-            // Call the external utility (Capacitor/Web logic)
             const coords = await getUserLocation();
             const { latitude, longitude } = coords;
 
@@ -76,19 +80,16 @@ const Report = () => {
             console.error("Location Error:", error);
             setGpsError("GPS Signal Lost");
             setAddress("Unable to retrieve location");
-            throw error; // Propagate error for the onClick handler
+            throw error;
         } finally {
             setGpsLoading(false);
         }
     };
 
-    // Placeholder for species fetching logic
     const fetchSpecies = (lat, lon) => {
         console.log(`Scanning local species for: ${lat}, ${lon}`);
-        // Add your logic to fetch species from GBIF or local DB here
     };
 
-    // Fetch Address from Nominatim
     const fetchAddress = async (lat, lon) => {
         try {
             const response = await fetch(
@@ -112,50 +113,169 @@ const Report = () => {
         }
     };
 
-    // Initial Load
     useEffect(() => {
         getLocation().catch(err => console.log("Initial GPS silent fail", err));
     }, []);
 
-    // Handle file selection
-    const handleFileChange = (e) => {
-        const newFiles = Array.from(e.target.files);
-        newFiles.forEach(file => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    setUploadedImages(prev => [...prev, {
-                        id: Date.now() + Math.random(),
-                        name: file.name,
-                        size: file.size,
-                        data: event.target.result
-                    }]);
-                };
-                reader.readAsDataURL(file);
+    const searchGbifSpecies = async (query) => {
+        if (!query || query.length < 2) {
+            setGbifSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        setSearchingGbif(true);
+        try {
+            const response = await fetch(
+                `https://api.gbif.org/v1/species/match?name=${encodeURIComponent(query)}`,
+                { headers: { 'User-Agent': 'BioSentinel-App/1.0' } }
+            );
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                const suggestions = data.results.slice(0, 5).map(s => ({
+                    scientificName: s.scientificName,
+                    canonicalName: s.canonicalName,
+                    kingdom: s.kingdom,
+                    taxonomicStatus: s.taxonomicStatus
+                }));
+                setGbifSuggestions(suggestions);
+                setShowSuggestions(true);
             }
-        });
+        } catch (error) {
+            console.error('GBIF search error:', error);
+            setGbifSuggestions([]);
+        } finally {
+            setSearchingGbif(false);
+        }
     };
 
-    // Remove image
+    const handleSpeciesChange = (e) => {
+        const value = e.target.value;
+        setSpeciesName(value);
+
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            searchGbifSpecies(value);
+        }, 300);
+    };
+
+    const selectSuggestion = (suggestion) => {
+        setSpeciesName(suggestion.canonicalName || suggestion.scientificName);
+        setGbifSuggestions([]);
+        setShowSuggestions(false);
+    };
+
+    const analyzeImage = async (file) => {
+        const endpoint = `${AI_ANALYSIS_URL}/classify/image/analyze`;
+        console.log('Starting image analysis:', file.name);
+        console.log('API endpoint:', endpoint);
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Analysis result:', result);
+                return result;
+            } else {
+                const errorText = await response.text();
+                console.error('Analysis failed with status:', response.status, errorText);
+            }
+        } catch (error) {
+            console.error('Image analysis fetch error:', error);
+        }
+        return null;
+    };
+
+    const handleFileChange = (e) => {
+        const newFiles = Array.from(e.target.files);
+        const validFiles = newFiles.filter(f => f.type.startsWith('image/'));
+        
+        if (validFiles.length > 0) {
+            setPendingFiles(validFiles);
+            setShowUploadConfirm(true);
+        }
+    };
+
+    const confirmUpload = async () => {
+        setShowUploadConfirm(false);
+        
+        for (let i = 0; i < pendingFiles.length; i++) {
+            const file = pendingFiles[i];
+            const imageUrl = URL.createObjectURL(file);
+            
+            setScanningImage({
+                id: Date.now() + i,
+                name: file.name,
+                size: file.size,
+                data: imageUrl
+            });
+            setScanProgress(0);
+            
+            for (let p = 0; p <= 100; p += 10) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                setScanProgress(p);
+            }
+            
+            const analysisResult = await analyzeImage(file);
+            
+            const isValid = !analysisResult?.ai_detection?.is_suspicious && 
+                           !analysisResult?.pixel_analysis?.is_suspicious &&
+                           analysisResult?.overall_assessment?.is_accepted !== false;
+            
+            setUploadedImages(prev => [...prev, {
+                id: Date.now() + i,
+                name: file.name,
+                size: file.size,
+                data: imageUrl,
+                analysis: analysisResult,
+                is_valid: isValid
+            }]);
+            
+            setScanningImage(null);
+            setScanProgress(0);
+            
+            if (!isValid) {
+                alert(`⚠️ AI-GENERATED IMAGE DETECTED: "${file.name}"\n\nThis image cannot be used for biodiversity reporting as it appears to be AI-generated.\n\nPlease upload authentic photos of wildlife.`);
+            }
+        }
+        
+        setPendingFiles([]);
+    };
+    
+    const cancelUpload = () => {
+        setShowUploadConfirm(false);
+        setPendingFiles([]);
+    };
+
     const removeImage = (id) => {
         setUploadedImages(prev => prev.filter(img => img.id !== id));
     };
 
-    // Open file picker
     const openFilePicker = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click();
         }
     };
 
-    // Open camera
     const openCamera = () => {
         if (cameraInputRef.current) {
             cameraInputRef.current.click();
         }
     };
 
-    // Call GBIF ML API
     const classifyWithGBIF = async (species, lat, lon) => {
         try {
             const response = await fetch(`${GBIF_API_URL}/gbif/classify`, {
@@ -173,8 +293,25 @@ const Report = () => {
         return null;
     };
 
-    // Handle Form Submission
-    const handleSubmit = async () => {
+    const hasRejectedImages = () => {
+        return uploadedImages.some(img => img.is_valid === false);
+    };
+    
+    const getValidImageCount = () => {
+        return uploadedImages.filter(img => img.is_valid !== false).length;
+    };
+
+    const handleSubmitClick = () => {
+        if (hasRejectedImages()) {
+            alert('Some images have been rejected due to AI-generated content detection. Please upload authentic photos.');
+            return;
+        }
+        
+        setShowSubmitConfirm(true);
+    };
+
+    const confirmSubmit = async () => {
+        setShowSubmitConfirm(false);
         setSubmitting(true);
         
         let riskData = null;
@@ -196,9 +333,14 @@ const Report = () => {
         console.log("Submitting Report Payload:", reportData);
         setRiskResult(riskData);
         setSubmitting(false);
+        
+        alert('Report submitted successfully!');
     };
 
-    // Get risk color
+    const cancelSubmit = () => {
+        setShowSubmitConfirm(false);
+    };
+
     const getRiskColor = (level) => {
         switch(level) {
             case 'Critical': return 'bg-red-500/20 border-red-500/50 text-red-400';
@@ -207,12 +349,100 @@ const Report = () => {
             default: return 'bg-green-500/20 border-green-500/50 text-green-400';
         }
     };
+    
+    const getAnalysisBadge = (analysis) => {
+        if (!analysis) return null;
+        
+        const isSuspicious = analysis.ai_detection?.is_suspicious || 
+                             analysis.pixel_analysis?.is_suspicious ||
+                             analysis.overall_assessment?.is_accepted === false;
+        
+        if (isSuspicious) {
+            return (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border border-white" title="AI-generated content detected">
+                    <span className="material-symbols-outlined text-white text-[10px]">close</span>
+                </div>
+            );
+        }
+        
+        return (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-neon-green rounded-full flex items-center justify-center border border-white" title="Analyzed - Authentic">
+                <span className="material-symbols-outlined text-black text-[10px]">check</span>
+            </div>
+        );
+    };
+    
+    const openAnalysisDetails = (img) => {
+        if (img.analysis) {
+            setSelectedImage(img);
+        }
+    };
+    
+    const closeAnalysisDetails = () => {
+        setSelectedImage(null);
+    };
+    
+    const getAIDetectionReasons = (analysis) => {
+        const reasons = [];
+        
+        if (analysis.ai_detection) {
+            if (analysis.ai_detection.ai_probability !== undefined) {
+                reasons.push({
+                    type: 'AI Probability',
+                    value: `${(analysis.ai_detection.ai_probability * 100).toFixed(1)}%`,
+                    detail: analysis.ai_detection.ai_probability > 0.7 ? 'High AI likelihood' : 
+                           analysis.ai_detection.ai_probability > 0.4 ? 'Moderate AI likelihood' : 'Low AI likelihood'
+                });
+            }
+            if (analysis.ai_detection.is_suspicious && analysis.ai_detection.reasons) {
+                analysis.ai_detection.reasons.forEach(r => reasons.push({ type: 'AI Detection', detail: r }));
+            }
+        }
+        
+        if (analysis.pixel_analysis) {
+            if (analysis.pixel_analysis.anomaly_score !== undefined) {
+                reasons.push({
+                    type: 'Pixel Anomaly Score',
+                    value: `${(analysis.pixel_analysis.anomaly_score * 100).toFixed(1)}%`,
+                    detail: analysis.pixel_analysis.anomaly_score > 0.5 ? 'Significant pixel anomalies detected' : 
+                           analysis.pixel_analysis.anomaly_score > 0.2 ? 'Minor pixel irregularities' : 'No significant pixel anomalies'
+                });
+            }
+            if (analysis.pixel_analysis.is_suspicious && analysis.pixel_analysis.reasons) {
+                analysis.pixel_analysis.reasons.forEach(r => reasons.push({ type: 'Pixel Analysis', detail: r }));
+            }
+        }
+        
+        if (analysis.overall_assessment) {
+            reasons.push({
+                type: 'Overall Assessment',
+                value: analysis.overall_assessment.is_accepted ? 'Accepted' : 'Rejected',
+                detail: analysis.overall_assessment.summary || 'Based on all detection methods'
+            });
+            if (analysis.overall_assessment.recommendations) {
+                analysis.overall_assessment.recommendations.forEach(r => reasons.push({ type: 'Recommendation', detail: r }));
+            }
+        }
+        
+        return reasons;
+    };
+
+    const scanStyle = {
+        animation: 'scan 1.5s ease-in-out infinite'
+    };
 
     return (
         <div className="text-white/90 font-sans min-h-screen bg-bg-gradient-start selection:bg-neon-green/30">
+            <style>{`
+                @keyframes scan {
+                    0% { top: 0%; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+            `}</style>
             <div className="max-w-md mx-auto min-h-screen relative z-10 pb-32">
                 
-                {/* Header */}
                 <div className="flex items-center p-6 justify-between">
                     <div className="flex-1 flex flex-col items-center">
                         <h2 className="frosted-text text-lg font-bold tracking-tight">Bio Sentinal</h2>
@@ -222,7 +452,6 @@ const Report = () => {
 
                 <form className="px-5 space-y-6" onSubmit={(e) => e.preventDefault()}>
                     
-                    {/* Observation Type */}
                     <section>
                         <h3 className="text-white/40 text-[11px] font-bold uppercase tracking-[0.15em] mb-3 ml-1">Observation Type</h3>
                         <div className="flex h-12 w-full items-center glass-panel p-1.5 gap-1 rounded-2xl">
@@ -248,11 +477,9 @@ const Report = () => {
                         </div>
                     </section>
 
-                    {/* Evidence Upload */}
                     <section>
                         <h3 className="text-white/40 text-[11px] font-bold uppercase tracking-[0.15em] mb-3 ml-1">Evidence</h3>
                         
-                        {/* Hidden file inputs */}
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -270,7 +497,6 @@ const Report = () => {
                             className="hidden"
                         />
                         
-                        {/* Upload Area */}
                         <div 
                             onClick={openFilePicker}
                             className="glass-panel border-dashed border-white/20 p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group rounded-3xl"
@@ -300,18 +526,27 @@ const Report = () => {
                             </div>
                         </div>
                         
-                        {/* Image Previews */}
                         {uploadedImages.length > 0 && (
                             <div className="flex gap-2 mt-3 flex-wrap">
                                 {uploadedImages.map((img) => (
-                                    <div key={img.id} className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/20">
+                                    <div 
+                                        key={img.id} 
+                                        className={`relative w-16 h-16 rounded-lg overflow-hidden border cursor-pointer group ${img.is_valid === false ? 'border-red-500/50 opacity-60' : 'border-white/20'}`}
+                                        onClick={() => openAnalysisDetails(img)}
+                                    >
                                         <img src={img.data} alt={img.name} className="w-full h-full object-cover" />
+                                        {getAnalysisBadge(img.analysis)}
+                                        <div className={`absolute inset-0 ${img.is_valid === false ? 'bg-red-500/20' : 'bg-black/0'} group-hover:bg-black/30 transition-colors flex items-center justify-center`}>
+                                            {img.is_valid === false && (
+                                                <span className="material-symbols-outlined text-red-500 text-xs">block</span>
+                                            )}
+                                        </div>
                                         <button
                                             type="button"
-                                            onClick={() => removeImage(img.id)}
-                                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px]"
+                                            onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
+                                            className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] py-0.5 truncate hover:bg-red-500/80 transition-colors"
                                         >
-                                            ×
+                                            {img.name.length > 12 ? img.name.substring(0, 12) + '...' : img.name}
                                         </button>
                                     </div>
                                 ))}
@@ -319,7 +554,6 @@ const Report = () => {
                         )}
                     </section>
 
-                    {/* Identification */}
                     <section className="space-y-4">
                         <h3 className="text-white/40 text-[11px] font-bold uppercase tracking-[0.15em] mb-3 ml-1">Identification</h3>
                         <div className="flex flex-col">
@@ -329,9 +563,37 @@ const Report = () => {
                                     placeholder="Species Name (e.g. Panthera tigris)" 
                                     type="text" 
                                     value={speciesName}
-                                    onChange={(e) => setSpeciesName(e.target.value)}
+                                    onChange={handleSpeciesChange}
                                 />
-                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-white/30">search</span>
+                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-white/30">
+                                    {searchingGbif ? 'hourglass_empty' : 'search'}
+                                </span>
+                                
+                                {showSuggestions && gbifSuggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden z-50 shadow-xl">
+                                        {gbifSuggestions.map((suggestion, index) => (
+                                            <div 
+                                                key={index}
+                                                onClick={() => selectSuggestion(suggestion)}
+                                                className="px-4 py-3 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-none transition-colors"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-white font-medium">
+                                                        {suggestion.canonicalName || suggestion.scientificName}
+                                                    </span>
+                                                    <span className="text-[10px] text-white/40 px-2 py-0.5 bg-white/10 rounded-full">
+                                                        {suggestion.kingdom}
+                                                    </span>
+                                                </div>
+                                                {suggestion.taxonomicStatus !== 'ACCEPTED' && (
+                                                    <span className="text-[10px] text-yellow-400">
+                                                        {suggestion.taxonomicStatus}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="glass-panel p-4 bg-white/[0.03] rounded-2xl">
@@ -353,7 +615,6 @@ const Report = () => {
                         </div>
                     </section>
 
-                    {/* Location */}
                     <section>
                         <div className="flex items-center justify-between mb-3 px-1">
                             <h3 className="text-white/40 text-[11px] font-bold uppercase tracking-[0.15em]">Location</h3>
@@ -365,7 +626,6 @@ const Report = () => {
                             </div>
                         </div>
 
-                        {/* Map */}
                         <div className="relative w-full h-44 rounded-3xl overflow-hidden border border-white/10 glass-panel z-0">
                             {location.lat !== 0 ? (
                                 <MapContainer 
@@ -386,7 +646,6 @@ const Report = () => {
                                 </div>
                             )}
 
-                            {/* Address Overlay */}
                             <div className="absolute bottom-3 left-3 right-3 glass-panel px-3 py-2 bg-black/80 border-white/20 rounded-xl backdrop-blur-md flex items-center justify-between z-[400]">
                                 <div className="flex flex-col overflow-hidden">
                                     <span className="text-[10px] font-mono text-neon-green font-bold mb-0.5">
@@ -406,8 +665,6 @@ const Report = () => {
                                 try {
                                     setScanStatus("LOCATING USER...");
                                     const { latitude, longitude } = await getLocation();
-
-                                    // Map auto-updates via the RecenterMap component when 'location' changes
                                     fetchSpecies(latitude, longitude);
                                     setScanStatus("IDLE");
                                 } catch (err) {
@@ -425,7 +682,6 @@ const Report = () => {
                         </button>
                     </section>
 
-                    {/* Disclaimer */}
                     <div className="p-4 glass-panel border-hard-pink/20 bg-hard-pink/5 rounded-2xl">
                         <div className="flex gap-3">
                             <span className="material-symbols-outlined text-hard-pink text-[20px]">verified_user</span>
@@ -436,7 +692,6 @@ const Report = () => {
                     </div>
                 </form>
 
-                {/* Submit Button & Risk Result */}
                 <div className="max-w-md mx-auto p-6 z-70 relative">
                     <div className="absolute inset-0 bg-linear-to-t from-bg-gradient-end via-bg-gradient-end/90 to-transparent pointer-events-none -mt-10"></div>
                     
@@ -457,8 +712,8 @@ const Report = () => {
                     )}
                     
                     <button 
-                        onClick={handleSubmit}
-                        disabled={submitting}
+                        onClick={handleSubmitClick}
+                        disabled={submitting || getValidImageCount() === 0}
                         className="relative w-full glass-panel bg-neon-green hover:bg-neon-green/90 text-black font-black h-16 flex items-center justify-center neon-glow transition-all active:scale-95 uppercase tracking-widest text-sm rounded-2xl shadow-[0_0_20px_rgba(57,255,20,0.4)] disabled:opacity-50"
                     >
                         {submitting ? (
@@ -473,6 +728,161 @@ const Report = () => {
                 </div>
             </div>
             <Nav />
+            
+            {showUploadConfirm && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+                    <div className="glass-panel bg-gray-900/95 border border-white/20 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="material-symbols-outlined text-neon-green text-2xl">image</span>
+                            <h3 className="text-lg font-bold text-white">Confirm Upload</h3>
+                        </div>
+                        <p className="text-white/70 text-sm mb-6">
+                            {pendingFiles.length} image(s) selected for analysis. Images will be scanned for AI-generated content.
+                        </p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={cancelUpload}
+                                className="flex-1 py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmUpload}
+                                className="flex-1 py-3 bg-neon-green text-black font-bold rounded-xl hover:bg-neon-green/90 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">check</span>
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {scanningImage && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000]">
+                    <div className="glass-panel bg-gray-900/95 border border-neon-green/30 p-6 rounded-2xl max-w-sm w-full">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-neon-green text-2xl animate-pulse">psychology</span>
+                                <h3 className="text-lg font-bold text-white">Scanning Image</h3>
+                            </div>
+                            <span className="text-neon-green font-mono">{scanProgress}%</span>
+                        </div>
+                        
+                        <div className="relative w-full h-64 rounded-xl overflow-hidden mb-4 border border-white/20">
+                            <img 
+                                src={scanningImage.data} 
+                                alt="Scanning" 
+                                className="w-full h-full object-contain bg-black/50"
+                            />
+                            <div 
+                                className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/50 to-transparent"
+                                style={{
+                                    ...scanStyle,
+                                    height: '4px',
+                                    top: `${scanProgress}%`,
+                                    opacity: 0.8
+                                }}
+                            />
+                            <div className="absolute inset-0 bg-[linear-gradient(rgba(57,255,20,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(57,255,20,0.1)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                        </div>
+                        
+                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-neon-green transition-all duration-100"
+                                style={{ width: `${scanProgress}%` }}
+                            ></div>
+                        </div>
+                        
+                        <p className="text-white/60 text-xs mt-3 text-center">Analyzing for AI-generated content...</p>
+                    </div>
+                </div>
+            )}
+            
+            {showSubmitConfirm && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+                    <div className="glass-panel bg-gray-900/95 border border-white/20 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="material-symbols-outlined text-neon-green text-2xl">send</span>
+                            <h3 className="text-lg font-bold text-white">Submit Report?</h3>
+                        </div>
+                        <p className="text-white/70 text-sm mb-6">
+                            This will submit {uploadedImages.length} image(s) to the biodiversity database.
+                        </p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={cancelSubmit}
+                                className="flex-1 py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmSubmit}
+                                className="flex-1 py-3 bg-neon-green text-black font-bold rounded-xl hover:bg-neon-green/90 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">check</span>
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {selectedImage && selectedImage.analysis && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000] p-4" onClick={closeAnalysisDetails}>
+                    <div className="glass-panel bg-gray-900/95 border border-white/20 p-6 rounded-2xl max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <span className={`material-symbols-outlined ${selectedImage.analysis.overall_assessment?.is_accepted === false ? 'text-red-500' : 'text-neon-green'} text-2xl`}>
+                                    {selectedImage.analysis.overall_assessment?.is_accepted === false ? 'warning' : 'verified'}
+                                </span>
+                                <h3 className="text-lg font-bold text-white">Image Analysis</h3>
+                            </div>
+                            <button 
+                                onClick={closeAnalysisDetails}
+                                className="text-white/50 hover:text-white transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden mb-4 border border-white/20">
+                            <img src={selectedImage.data} alt="Analyzed" className="w-full h-full object-contain bg-black/50" />
+                        </div>
+                        
+                        <div className={`p-3 rounded-xl mb-4 ${selectedImage.analysis.overall_assessment?.is_accepted === false ? 'bg-red-500/20 border border-red-500/30' : 'bg-neon-green/20 border border-neon-green/30'}`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-white">Status</span>
+                                <span className={`text-sm font-bold ${selectedImage.analysis.overall_assessment?.is_accepted === false ? 'text-red-400' : 'text-neon-green'}`}>
+                                    {selectedImage.analysis.overall_assessment?.is_accepted === false ? 'AI-GENERATED DETECTED' : 'AUTHENTIC'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-bold text-white/60 uppercase tracking-wider">Analysis Details</h4>
+                            {getAIDetectionReasons(selectedImage.analysis).map((reason, index) => (
+                                <div key={index} className="glass-panel bg-white/[0.03] p-3 rounded-xl">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-medium text-neon-green">{reason.type}</span>
+                                        {reason.value && (
+                                            <span className="text-xs font-bold text-white/80">{reason.value}</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-white/50">{reason.detail}</p>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <button 
+                            onClick={closeAnalysisDetails}
+                            className="w-full mt-4 py-3 glass-panel border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 transition-colors"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

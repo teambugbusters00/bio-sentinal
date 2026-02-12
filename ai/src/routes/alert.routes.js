@@ -43,39 +43,63 @@ router.get('/gbif/search', async (req, res) => {
     }
 });
 
-// Get all alerts (from Appwrite or mock)
+// Get all alerts (from file storage)
 router.get('/', async (req, res) => {
     try {
-        // Try to fetch from Appwrite first
         const dbAlerts = await alertService.fetchAlertsFromDatabase();
         
         if (dbAlerts && dbAlerts.length > 0) {
-            // Format Appwrite alerts for frontend
+            // Format alerts for frontend
             const alerts = dbAlerts.map(doc => ({
-                id: doc.$id,
-                type: doc.type,
-                level: doc.level,
-                icon: doc.icon,
+                id: doc.id,
+                type: doc.type || 'INFO',
+                level: doc.level || 'MODERATE',
+                category: doc.category || 'General',
                 title: doc.title,
                 description: doc.description,
-                time: alertService.generateMockAlerts()[0]?.time || 'Just now',
+                timestamp: doc.createdAt || new Date().toISOString(),
                 location: doc.location,
-                confidence: doc.confidence,
-                source: doc.source,
-                category: doc.category,
-                verified: doc.verified,
-                rangerCount: doc.rangerCount
+                lat: doc.lat,
+                lon: doc.lon,
+                confidence: doc.confidence || 85,
+                source: doc.source || 'User Report',
+                urgency: doc.urgency || 'MODERATE',
+                affectedSpecies: doc.affectedSpecies || [],
+                actions: doc.actions || [],
+                reportedBy: doc.reportedBy || 'Anonymous'
             }));
             return res.json(alerts);
         }
         
-        // Return mock alerts if no database alerts
-        const mockAlerts = alertService.generateMockAlerts();
+        // Return initial mock alerts if no database alerts
+        const mockAlerts = alertService.generateInitialAlerts();
         res.json(mockAlerts);
     } catch (error) {
         console.error('Error fetching alerts:', error);
-        // Fall back to mock data
-        res.json(alertService.generateMockAlerts());
+        // Fall back to initial mock data
+        res.json(alertService.generateInitialAlerts());
+    }
+});
+
+// Get danger zones
+router.get('/danger-zones', async (req, res) => {
+    try {
+        const dangerZones = alertService.getDangerZones();
+        res.json(dangerZones);
+    } catch (error) {
+        console.error('Error fetching danger zones:', error);
+        res.json(alertService.getDangerZones());
+    }
+});
+
+// Get satellite/MOSDAC data
+router.get('/mosdac', async (req, res) => {
+    try {
+        const mosdacData = alertService.getMosdacData();
+        res.json(mosdacData);
+    } catch (error) {
+        console.error('Error fetching MOSDAC data:', error);
+        res.json(alertService.getMosdacData());
     }
 });
 
@@ -96,16 +120,46 @@ router.post('/process', async (req, res) => {
     }
 });
 
-// Create new alert manually
+// Create new alert from user report
 router.post('/', async (req, res) => {
     try {
         const alertData = req.body;
-        const saved = await alertService.saveAlertToDatabase(alertData);
+        
+        // Create the alert object
+        const newAlert = {
+            type: alertData.type || 'USER_REPORT',
+            level: mapSeverityToLevel(alertData.severity),
+            category: alertData.category || 'General',
+            title: alertData.title,
+            description: alertData.description,
+            location: alertData.location,
+            lat: alertData.lat || 0,
+            lon: alertData.lon || 0,
+            confidence: 95,
+            source: 'User Report',
+            urgency: alertData.severity === 'critical' ? 'IMMEDIATE' : 
+                    alertData.severity === 'high' ? 'HIGH' : 
+                    alertData.severity === 'moderate' ? 'MODERATE' : 'LOW',
+            affectedSpecies: alertData.affectedSpecies || [],
+            actions: generateActions(alertData.category, alertData.severity),
+            reportedBy: alertData.reportedBy || 'Anonymous'
+        };
+        
+        // Save to database/file
+        const saved = await alertService.saveAlertToDatabase(newAlert);
         
         if (saved) {
+            // Broadcast to all connected clients via Socket.io
+            const io = req.app.locals.io;
+            if (io) {
+                io.to('alerts-room').emit('new-alert', saved);
+                console.log('Broadcasted new alert to all clients:', saved.id);
+            }
+            
             res.json({
                 success: true,
-                alert: saved
+                alert: saved,
+                message: 'Alert created and broadcasted to all users'
             });
         } else {
             res.status(500).json({
@@ -138,5 +192,36 @@ router.get('/risk-analysis', async (req, res) => {
         });
     }
 });
+
+// Helper function to map severity to level
+function mapSeverityToLevel(severity) {
+    const mapping = {
+        'critical': 'CRITICAL',
+        'high': 'HIGH',
+        'moderate': 'MODERATE',
+        'low': 'LOW'
+    };
+    return mapping[severity?.toLowerCase()] || 'MODERATE';
+}
+
+// Helper function to generate recommended actions
+function generateActions(category, severity) {
+    const baseActions = {
+        'Pollution Event': ['Notify pollution control board', 'Deploy cleanup team', 'Alert downstream communities'],
+        'Species Sighting': ['Document sighting', 'Update population estimates', 'Monitor movement patterns'],
+        'Illegal Activity': ['Alert forest officials', 'Document evidence', 'Coordinate with authorities'],
+        'Disease': ['Sample collection', 'Notify veterinary team', 'Quarantine area'],
+        'Infrastructure': ['Log maintenance request', 'Alert maintenance team', 'Secure area'],
+        'General': ['Document observation', 'Update records', 'Monitor for changes']
+    };
+    
+    const actions = baseActions[category] || baseActions['General'];
+    
+    if (severity === 'critical' || severity === 'high') {
+        return ['URGENT: ' + actions[0], ...actions.slice(1)];
+    }
+    
+    return actions;
+}
 
 export default router;

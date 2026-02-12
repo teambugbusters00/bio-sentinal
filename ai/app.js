@@ -4,6 +4,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import Groq from "groq-sdk"; // Import Groq SDK
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import Routes
 import aiRoutes from './src/routes/ai.routes.js';
@@ -14,10 +23,55 @@ import satelliteRoutes from './src/routes/satellite.routes.js';
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+
+// Socket.io setup for real-time notifications
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+
+// Store io instance for routes
+app.locals.io = io;
+
+// Handle socket.io connections
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    
+    socket.on('join-alerts', () => {
+        socket.join('alerts-room');
+        console.log(`Client ${socket.id} joined alerts room`);
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
 
 // --- Middleware ---
 app.use(cors({ origin: '*' }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(), // Store files in memory for processing
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
+});
+
+// Make upload middleware available to routes
+app.locals.upload = upload;
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
@@ -117,6 +171,6 @@ app.use((req, res) => {
 
 // --- Start Server ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Biosentinal AI API running on port ${PORT}!`);
 });
