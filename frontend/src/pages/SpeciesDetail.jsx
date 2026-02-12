@@ -71,7 +71,7 @@ const SpeciesDetail = () => {
                     // Use API URL from .env or fallback to localhost
                     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
                     
-                    const aiRes = await axios.post(`${apiUrl}/api/species`, {
+                    const aiRes = await axios.post(`${apiUrl}/species`, {
                         speciesName: cleanName
                     });
 
