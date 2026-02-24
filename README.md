@@ -216,14 +216,6 @@ Base URL: http://localhost:7860
 
 ---
 
-## 👥 Team
-
-| Name | Role |
-|------|------|
-| **Vijay Ramdev** | ML & Model Developer |
-| **Preeti Yadav** | Event Manager & Researcher |
-| **Aayush Laddha** | Web & Backend Developer |
-| 
 
 
 ---
