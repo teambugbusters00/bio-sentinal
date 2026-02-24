@@ -1,4 +1,4 @@
-# <img src="https://biosentinal.vercel.app/BioSentinal.png" alt="BioSentinel Logo" width="40" height="40" /> Bio Sentinal
+.# <img src="https://biosentinal.vercel.app/BioSentinal.png" alt="BioSentinel Logo" width="40" height="40" /> Bio Sentinal
 
 Real-time biodiversity protection platform using AI, satellite insights, and community action.
 
