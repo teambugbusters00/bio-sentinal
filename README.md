@@ -21,11 +21,7 @@ Bio Sentinal is a biodiversity monitoring platform that combines AI, satellite i
 
 ---
 
-## App Download
-
-Scan the QR code to download the APK - Scanning starts APK Download
-
-# <img src="https://biosentinal.vercel.app/ApkQR.png" alt="Apk QR" width="300" height="300" />
+>
 
 ---
 
